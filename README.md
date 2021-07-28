@@ -42,6 +42,8 @@ const tx = await Babbage.createAction({
 const response = await upload({
   referenceNumber: inv.referenceNumber,
   transactionHex: tx.rawTransaction,
+  mapiResponses: tx.mapiResponses,
+  inputs: tx.inputs,
   file,
   serverURL
 })

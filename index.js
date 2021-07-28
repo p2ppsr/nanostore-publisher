@@ -53,12 +53,18 @@ const upload = async ({
   referenceNumber,
   transactionHex,
   file,
+  inputs,
+  mapiResponses,
+  proof,
   serverURL = 'https://nanostore.babbage.systems'
 }) => {
   const data = new FormData()
   data.append('file', file)
   data.append('referenceNumber', referenceNumber)
   data.append('transactionHex', transactionHex)
+  data.append('inputs', inputs)
+  data.append('mapiResponses', mapiResponses)
+  data.append('proof', proof)
 
   const { data: response } = await post(
     `${serverURL}/upload`,
