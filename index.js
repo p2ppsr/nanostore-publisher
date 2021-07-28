@@ -62,9 +62,15 @@ const upload = async ({
   data.append('file', file)
   data.append('referenceNumber', referenceNumber)
   data.append('transactionHex', transactionHex)
-  data.append('inputs', inputs)
-  data.append('mapiResponses', mapiResponses)
-  data.append('proof', proof)
+  if (inputs) {
+    data.append('inputs', JSON.stringify(inputs))
+  }
+  if (mapiResponses) {
+    data.append('mapiResponses', JSON.stringify(mapiResponses))
+  }
+  if (proof) {
+    data.append('proof', JSON.stringify(proof))
+  }
 
   const { data: response } = await post(
     `${serverURL}/upload`,
