@@ -1,11 +1,11 @@
-const { post } = require('axios')
+const { put, post } = require('axios')
+const { getURLForFile } = require('uhrp-url')
 
-// browsers use window.FormData, node uses the form-data package
-let FormData
-if (typeof window === 'object' && window.FormData) {
-  FormData = window.FormData
+let FileReader
+if (typeof window !== 'undefined' && window.FileReader) {
+  FileReader = window.FileReader
 } else {
-  FormData = require('form-data')
+  FileReader = require('filereader')
 }
 
 /**
@@ -46,6 +46,7 @@ const invoice = async ({
  * @param {String} obj.transactionHex A Bitcoin SV transaction, in hex string format, which includes the outputs specified by the `invoice` function. It must be signed, and if not already broadcasted, it will be sent to miners by the NanoStore server.
  * @param {File} obj.file The file to upload. This is usually obtained by querying for your HTML form's file upload `<input />` tag and referencing `tagElement.files[0]`.
  * @param {String} [obj.serverURL=https://nanostore.babbage.systems] The URL of the NanoStore server to contract with. By default, the Babbage NanoStore server is used.
+ * @param {Function} [obj.onUploadProgress] A function called with periodic progress updates as the file uploads
  *
  * @returns {Promise<Object>} The publication object. Fields are `published=true`, `hash` (the UHRP URL of the new file), and `publicURL`, the HTTP URL where the file is published.
  */
@@ -56,37 +57,53 @@ const upload = async ({
   inputs,
   mapiResponses,
   proof,
-  serverURL = 'https://nanostore.babbage.systems'
+  serverURL = 'https://nanostore.babbage.systems',
+  onUploadProgress = () => { }
 }) => {
-  const data = new FormData()
-  data.append('file', file)
-  data.append('referenceNumber', referenceNumber)
-  data.append('transactionHex', transactionHex)
+  const data = {
+    referenceNumber,
+    rawTx: transactionHex
+  }
   if (inputs) {
-    data.append('inputs', JSON.stringify(inputs))
+    data.inputs = JSON.stringify(inputs)
   }
   if (mapiResponses) {
-    data.append('mapiResponses', JSON.stringify(mapiResponses))
+    data.mapiResponses = JSON.stringify(mapiResponses)
   }
   if (proof) {
-    data.append('proof', JSON.stringify(proof))
+    data.proof = JSON.stringify(proof)
   }
 
-  const { data: response } = await post(
-    `${serverURL}/upload`,
-    data,
-    {
-      headers: {
-        'content-type': 'multipart/form-data'
-      }
-    }
+  const { data: payResult } = await post(
+    `${serverURL}/pay`,
+    data
   )
 
-  if (response.published !== true) {
-    throw new Error(response.description || 'The file failed to upload!')
-  }
+  // This uploads the file and hashes the file at the same time
+  const concurrentResult = await Promise.all([
+    put(
+      payResult.uploadURL,
+      file,
+      { headers: { 'Content-Type': file.type }, onUploadProgress }
+    ),
+    new Promise((resolve, reject) => {
+      try {
+        const fr = new FileReader()
+        fr.addEventListener('load', () => {
+          resolve(getURLForFile(Buffer.from(fr.result)))
+        })
+        fr.readAsArrayBuffer(file)
+      } catch (e) {
+        reject(e)
+      }
+    })
+  ])
 
-  return response
+  return {
+    published: true,
+    publicURL: payResult.publicURL,
+    hash: concurrentResult[1]
+  }
 }
 
 module.exports = { invoice, upload }

@@ -90,6 +90,10 @@ Uploads a file to NanoStore and pays an invoice, thereby starting the file hosti
     *   `obj.transactionHex` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** A Bitcoin SV transaction, in hex string format, which includes the outputs specified by the `invoice` function. It must be signed, and if not already broadcasted, it will be sent to miners by the NanoStore server.
     *   `obj.file` **File** The file to upload. This is usually obtained by querying for your HTML form's file upload `<input />` tag and referencing `tagElement.files[0]`.
     *   `obj.serverURL` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The URL of the NanoStore server to contract with. By default, the Babbage NanoStore server is used. (optional, default `https://nanostore.babbage.systems`)
+    *   `obj.onUploadProgress` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)?** A function called with periodic progress updates as the file uploads (optional, default `()=>{}`)
+    *   `obj.inputs`  
+    *   `obj.mapiResponses`  
+    *   `obj.proof`  
 
 Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The publication object. Fields are `published=true`, `hash` (the UHRP URL of the new file), and `publicURL`, the HTTP URL where the file is published.
 
