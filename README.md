@@ -18,6 +18,7 @@ const Babbage = require('@babbage/sdk')
 (async () => {
 // Get a reference to a File element somehow, or create one if using Node
 const file = document.getElementById('file_upload_form_input').files[0]
+const serverURL = 'https://nanostore.babbage.systems'
 
 // Send an invoice to the server to get transaction outputs
 const inv = await invoice({
@@ -32,10 +33,7 @@ const tx = await Babbage.createAction({
     satoshis: x.amount,
     script: x.outputScript
   })),
-  keyName: 'primarySigning',
-  keyPath: 'm/1033/1',
-  description: 'Upload with NanoStore',
-  labels: ['nanostore']
+  description: 'Upload with NanoStore'
 })
 
 // Upload the file and submit the payment of the invoice
