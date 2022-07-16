@@ -74,6 +74,21 @@ const upload = async ({
     data.proof = JSON.stringify(proof)
   }
 
+  // Allow uploads with MiniScribe
+  if (serverURL.startsWith('http://localhost')) {
+    const FormData = require('form-data')
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await post(`${serverURL}/pay`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return {
+      published: true,
+      publicURL: `${serverURL}/data/${res.data}`,
+      hash: res.data
+    }
+  }
+
   const { data: payResult } = await post(
     `${serverURL}/pay`,
     data
