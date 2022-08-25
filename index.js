@@ -1,5 +1,9 @@
+'use strict'
 const { put, post } = require('axios')
 const { getURLForFile } = require('uhrp-url')
+const invoice = require('./invoice')
+const pay = require('./pay')
+const { CONFIG } = require('./defaults')
 
 let FileReader
 if (typeof window !== 'undefined' && window.FileReader) {
@@ -11,69 +15,114 @@ if (typeof window !== 'undefined' && window.FileReader) {
 /**
  * Creates an invoice for a NanoStore file hosting contract.
  *
- * @param {Object} obj All parameters are given in an object.
- * @param {Number} obj.fileSize The size of the file you want to host in bytes.
- * @param {Number} obj.retentionPeriod The whole number of minutes you want the file to be hosted.
- * @param {String} [obj.serverURL=https://nanostore.babbage.systems] The URL of the NanoStore server to contract with. By default, the Babbage NanoStore server is used.
+ * @param {Object} [obj] All parameters are given in an object.
+ * @param {Object} [obj.config] config object, see config section.
+ * @param {Number} [obj.fileSize] The size of the file you want to host in bytes.
+ * @param {Number} [obj.retentionPeriod] The whole number of minutes you want the file to be hosted for.
  *
- * @returns {Promise<Object>} The invoice object, containing `referenceNumber` and `outputs`, which is an array of BSV transaction output scripts to use when creating the transaction that you will provide to the `upload` function. Each element in the outputs array contains `outputScript` and `amount` (satoshis). The object also contains `publicURL`, which is the HTTP URL where the file will become available for the duration of the contract once uploaded.
+ * @returns {Promise<Object>} The invoice object, containing `paymail` address for payment to be sent to, `amount` (satoshis), `ORDER_ID`, for referencing this contract payment and passed to the `upload` function. The object also contains `publicURL`, which is the HTTP URL where the file will become available for the duration of the contract once uploaded.
  */
-const invoice = async ({
-  fileSize,
-  retentionPeriod,
-  serverURL = 'https://nanostore.babbage.systems'
-}) => {
-  const { data: invoice } = await post(`${serverURL}/invoice`, {
-    fileSize,
-    retentionPeriod
-  })
-  if (
-    !invoice ||
-    !invoice.referenceNumber ||
-    !invoice.publicURL ||
-    !Array.isArray(invoice.outputs)
-  ) {
-    throw new Error(invoice.description || 'Error creating invoice!')
+const config = CONFIG
+
+async e => {
+  e.preventDefault()
+  try {
+    const invoiceResult = await invoice({
+      config,
+      fileSize,
+      retentionPeriod
+    })
+    console.log('invoiceResult:', invoiceResult)
+    return invoiceResult
+  } catch (e) {
+    if (invoiceResult.status === 'success') {
+      if (!invoiceResult.paymail) {
+        throw e
+      }
+      if (!invoiceResult.amount) {
+        throw e
+      }
+      if (!invoiceResult.ORDER_ID) {
+        throw e
+      }
+      if (!invoiceResult.publicURL) {
+        throw e
+      }
+      return invoiceResult
+    } else {
+      let e = new Error('Invoice creation has failed.')
+      e.code = 'ERR_INVOICE_CREATION_FAILED'
+      throw e
+    }
   }
-  return invoice
+}
+
+/**
+ * Payment for the NanoStore file hosting contract.
+ *
+ * @param {Object} [obj] All parameters are given in an object.
+ * @param {Object} [obj.config] config object, see config section.
+ * @param {String} [obj.sender] The sender paymail making the payment.
+ * @param {String} [obj.recipient] The recipient paymail receiving the payment.
+ * @param {Number} [obj.amount] The number of satoshis being paid.
+ * @param {String} [obj.description] The description to be used for the payment.
+ * @param {String} [obj.orderID] The reference for the payment.
+ *
+ * @returns {Promise<Object>} The pay object, containing `txids` array of BSV transaction ids, `note` containing the user's Paymail and thanking them, `reference` to the payment (normally the `ORDER_ID`) and the `status'.
+ */
+
+async e => {
+  e.preventDefault()
+  try {
+    const payResult = await pay({
+      config,
+      sender,
+      recipient,
+      amount,
+      description,
+      orderID
+    })
+    console.log('payResult:', payResult)
+    return payResult
+  } catch (e) {
+    if (payResult.status === 'success') {
+      if (!payResult.uploadURL) {
+        throw e
+      }
+      if (!payResult.publicURL) {
+        throw e
+      }
+      return payResult
+    } else {
+      let e = new Error('Paying invoice has failed.')
+      e.code = 'ERR_PAY_INVOICE_FAILED'
+      throw e
+    }
+  }
 }
 
 /**
  * Uploads a file to NanoStore and pays an invoice, thereby starting the file hosting contract.
  *
- * @param {Object} obj All parameters are given in an object.
- * @param {String} obj.referenceNumber The reference number that was given to you when you called the `invoice` function.
- * @param {String} obj.transactionHex A Bitcoin SV transaction, in hex string format, which includes the outputs specified by the `invoice` function. It must be signed, and if not already broadcasted, it will be sent to miners by the NanoStore server.
- * @param {File} obj.file The file to upload. This is usually obtained by querying for your HTML form's file upload `<input />` tag and referencing `tagElement.files[0]`.
+ * @param {Object} [obj] All parameters are given in an object.
+ * @param {String} [obj.uploadURL] the external URL where the file is uploaded to
+ * @param {File} [obj.file] The file to upload. This is usually obtained by querying for your HTML form's file upload `<input />` tag and referencing `tagElement.files[0]`.
  * @param {String} [obj.serverURL=https://nanostore.babbage.systems] The URL of the NanoStore server to contract with. By default, the Babbage NanoStore server is used.
  * @param {Function} [obj.onUploadProgress] A function called with periodic progress updates as the file uploads
  *
  * @returns {Promise<Object>} The publication object. Fields are `published=true`, `hash` (the UHRP URL of the new file), and `publicURL`, the HTTP URL where the file is published.
  */
+
 const upload = async ({
-  referenceNumber,
-  transactionHex,
+  uploadURL,
+  publicURL,
   file,
-  inputs,
-  mapiResponses,
-  proof,
-  serverURL = 'https://nanostore.babbage.systems',
+  serverURL = `${config.nanostoreURL}`,
   onUploadProgress = () => { }
 }) => {
-  const data = {
-    referenceNumber,
-    rawTx: transactionHex
-  }
-  if (inputs) {
-    data.inputs = JSON.stringify(inputs)
-  }
-  if (mapiResponses) {
-    data.mapiResponses = JSON.stringify(mapiResponses)
-  }
-  if (proof) {
-    data.proof = JSON.stringify(proof)
-  }
-
+  console.log('serverURL:', serverURL)
+  console.log('publicURL:', publicURL)
+  console.log('uploadURL:', uploadURL)
   // Allow uploads with MiniScribe
   if (serverURL.startsWith('http://localhost')) {
     const FormData = require('form-data')
@@ -89,15 +138,10 @@ const upload = async ({
     }
   }
 
-  const { data: payResult } = await post(
-    `${serverURL}/pay`,
-    data
-  )
-
   // This uploads the file and hashes the file at the same time
   const concurrentResult = await Promise.all([
     put(
-      payResult.uploadURL,
+      uploadURL,
       file,
       { headers: { 'Content-Type': file.type }, onUploadProgress }
     ),
@@ -116,9 +160,9 @@ const upload = async ({
 
   return {
     published: true,
-    publicURL: payResult.publicURL,
+    publicURL: publicURL,
     hash: concurrentResult[1]
   }
 }
 
-module.exports = { invoice, upload }
+module.exports = { invoice, pay, upload }
