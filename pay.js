@@ -17,16 +17,6 @@ const { CONFIG } = require('./defaults')
  */
 
 module.exports = async ({ config = CONFIG, sender, recipient, description, orderID, amount } = {}) => {
-  /**
-   * Payment for the NanoStore file hosting contract.
-   *
-   * @param {Object} obj All parameters are given in an object.
-   * @param {String} obj.recipient The recipient paymail receiving the payment.
-   * @param {Number} obj.amount The number of satoshis being paid.
-   * @param {String} obj.description The description to be used for the payment.
-   *
-   * @returns {Promise<Object>} The pay object, containing `txids` array of BSV transaction ids, `note` containing the user's Paymail and thanking them, `reference` to the payment (normally the `ORDER_ID`) and the `status`'.
-   */
 
   // Pay the recipient
   const paymentResult = await paymail.send({
