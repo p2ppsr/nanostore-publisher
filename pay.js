@@ -15,66 +15,25 @@ const { CONFIG } = require('./defaults')
  *
  * @returns {Promise<Object>} The pay object, containing `txids` array of BSV transaction ids, `note` containing the user's Paymail and thanking them, `reference` to the payment (normally the `ORDER_ID`) and the `status'.
  */
-
 module.exports = async ({ config = CONFIG, sender, recipient, description, orderID, amount } = {}) => {
-
-  // Pay the recipient
-  const paymentResult = await paymail.send({
+  // Pay the host for storing the file
+  const payment = await paymail.send({
     recipient,
     amount,
     description
   })
-  console.log('paymentResult:', paymentResult)
-  if (paymentResult.status === 'success') {
-    if (!paymentResult.txids) {
-      const e = new Error('Payment BSV transaction ids are missing.')
-      e.code = 'ERR_PAYMENT_TXIDS_MISSING'
-      throw e
+  console.log('payment:', payment)
+  const pay = await createSignedRequest({
+    config,
+    path: '/pay',
+    body: {
+      referenceNumber: payment.reference,
+      paymail: sender,
+      description: 'Confirmation that payment has been made',
+      orderID,
+      amount
     }
-    if (!paymentResult.note) {
-      const e = new Error('Payment note is missing.')
-      e.code = 'ERR_PAYMENT_NOTE_MISSING'
-      throw e
-    }
-    if (!paymentResult.reference) {
-      const e = new Error('Payment reference is missing.')
-      e.code = 'ERR_PAYMENT_REFERENCE_MISSING'
-      throw e
-    }
-
-    // Send the recipient proof of payment,
-    const paidResult = await createSignedRequest({
-      config,
-      path: '/pay',
-      body: {
-        referenceNumber: paymentResult.reference,
-        paymail: sender,
-        description: 'Confirmation that payment has been made',
-        orderID,
-        amount
-      }
-    })
-    console.log('paidResult:', paidResult)
-    if (paidResult.status === 'success') {
-      if (!paidResult.uploadURL) {
-        const e = new Error('Paid upload url is missing.')
-        e.code = 'ERR_PAID_UPLOAD_URL_MISSING'
-        throw e
-      }
-      if (!paidResult.publicURL) {
-        const e = new Error('Paid public url is missing.')
-        e.code = 'ERR_PAID_PUBLIC_URL_MISSING'
-        throw e
-      }
-      return paidResult
-    } else {
-      const e = new Error('Paid confirmation for hosting file response has failed:result:' + JSON.stringify(paidResult))
-      e.code = 'ERR_PAID_STATUS_' + paidResult.status
-      throw e
-    }
-  } else {
-    const e = new Error('Payment for hosting file has failed:result:' + JSON.stringify(paymentResult))
-    e.code = 'ERR_PAYMENT_STATUS_' + paymentResult.status
-    throw e
-  }
+  })
+  console.log('pay:', pay)
+  return pay
 }
