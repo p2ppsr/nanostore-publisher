@@ -43,19 +43,6 @@ module.exports = async ({ config = CONFIG, sender, recipient, description, order
     }
 
     // Send the recipient proof of payment,
-    /**
-     * Confirmation of payment for the NanoStore file hosting contract.
-     *
-     * @param {Object} obj All parameters are given in an object.
-     * @param {String} obj.referenceNumber The reference returned for the payment.
-     * @param {String} obj.paymail The sender paymail who made the payment.
-     * @param {Number} obj.amount The number of satoshis being paid.
-     * @param {String} obj.description The description to be used for the payment.
-     * @param {String} obj.orderID The reference for the payment of the invoice received for hosting.
-     *
-     * @returns {Promise<Object>} The paid object, containing `uploadURL` the external URL where the file is uploaded to, `publicURL` for retieving the file and finally the `status`'.
-     */
-
     const paidResult = await createSignedRequest({
       config,
       path: '/pay',
