@@ -1,4 +1,3 @@
-'use strict'
 const { put, post } = require('axios')
 const { getURLForFile } = require('uhrp-url')
 const invoice = require('./invoice')
