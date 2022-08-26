@@ -1,9 +1,9 @@
 {
   "name": "nanostore-publisher",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Publish UHRP Content with NanoStore",
   "main": "index.js",
-  "scripts": {
+    "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
     "doc": "documentation readme index.js --section=API"

@@ -13,27 +13,30 @@ const { CONFIG } = require('./defaults')
  * @param {String} obj.description The description to be used for the payment.
  * @param {String} obj.orderID The reference for the payment of the invoice received for hosting.
  *
- * @returns {Promise<Object>} The pay object, containing `txids` array of BSV transaction ids, `note` containing the user's Paymail and thanking them, `reference` to the payment (normally the `ORDER_ID`) and the `status'.
+ * @returns {Promise<Object>} The pay object, contains the `uploadURL` and the `publicURL` and the `status`'.
  */
 module.exports = async ({ config = CONFIG, sender, recipient, description, orderID, amount } = {}) => {
-  // Pay the host for storing the file
+  // Pay the host for storing the file, this return the txid.
   const payment = await paymail.send({
     recipient,
     amount,
     description
   })
-  console.log('payment:', payment)
+  if (payment.status === 'error') {
+    return payment
+  }
+  //console.log('payment:', payment)
   const pay = await createSignedRequest({
     config,
     path: '/pay',
     body: {
-      referenceNumber: payment.reference,
+      reference: payment.reference,
       paymail: sender,
       description: 'Confirmation that payment has been made',
       orderID,
       amount
     }
   })
-  console.log('pay:', pay)
+  // console.log('pay:', pay)
   return pay
 }
