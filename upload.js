@@ -56,12 +56,6 @@ module.exports = async ({ config = CONFIG, uploadURL, publicURL, file, serverURL
       }
     })
   ])
-  // console.log('concurrentResult:', concurrentResult)
-  if (concurrentResult.status === 'error') {
-    const e = new Error(concurrentResult.description)
-    e.code = concurrentResult.code
-    throw e
-  }
   return {
     published: true,
     publicURL,
