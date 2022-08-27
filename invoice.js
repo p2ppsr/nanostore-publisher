@@ -23,5 +23,10 @@ module.exports = async ({ config = CONFIG, fileSize, retentionPeriod } = {}) => 
     }
   })
   // console.log('invoice:', invoice)
+  if (invoice.status === 'error') {
+    const e = new Error(invoice.description)
+    e.code = invoice.code
+    throw e
+  }
   return invoice
 }

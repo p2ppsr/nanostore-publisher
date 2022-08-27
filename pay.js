@@ -38,5 +38,10 @@ module.exports = async ({ config = CONFIG, sender, recipient, description, order
     }
   })
   // console.log('pay:', pay)
+  if (pay.status === 'error') {
+    const e = new Error(pay.description)
+    e.code = pay.code
+    throw e
+  }
   return pay
 }
