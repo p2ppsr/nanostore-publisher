@@ -13,9 +13,7 @@ module.exports = async ({ config, path, body }) => {
   )
   result = JSON.parse(Buffer.from(result.body).toString('utf8'))
   if (typeof result === 'object' && result.status === 'error') {
-    const e = new Error(
-      `${result.code}: ${result.description}`
-    )
+    const e = new Error(result.description)
     Object
       .keys(result)
       .filter(x => x !== 'status' && x !== 'description')
