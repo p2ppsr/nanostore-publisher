@@ -1,3 +1,4 @@
+/* eslint-env jest */
 const { invoice, upload } = require('./index')
 const { post } = require('axios')
 const Window = require('window')

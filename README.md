@@ -59,8 +59,10 @@ console.log(response)
 
 *   [invoice](#invoice)
     *   [Parameters](#parameters)
-*   [upload](#upload)
+*   [pay](#pay)
     *   [Parameters](#parameters-1)
+*   [upload](#upload)
+    *   [Parameters](#parameters-2)
 
 ### invoice
 
@@ -68,13 +70,30 @@ Creates an invoice for a NanoStore file hosting contract.
 
 #### Parameters
 
-*   `obj` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** All parameters are given in an object.
+*   `obj` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** All parameters are given in an object. (optional, default `{}`)
 
+    *   `obj.config` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** config object, see config section. (optional, default `CONFIG`)
     *   `obj.fileSize` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** The size of the file you want to host in bytes.
-    *   `obj.retentionPeriod` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** The whole number of minutes you want the file to be hosted.
-    *   `obj.serverURL` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The URL of the NanoStore server to contract with. By default, the Babbage NanoStore server is used. (optional, default `https://nanostore.babbage.systems`)
+    *   `obj.retentionPeriod` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** The whole number of minutes you want the file to be hosted for.
 
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The invoice object, containing `referenceNumber` and `outputs`, which is an array of BSV transaction output scripts to use when creating the transaction that you will provide to the `upload` function. Each element in the outputs array contains `outputScript` and `amount` (satoshis). The object also contains `publicURL`, which is the HTTP URL where the file will become available for the duration of the contract once uploaded.
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The invoice object, containing `paymail` address for payment to be sent to, `amount` (satoshis), `ORDER_ID`, for referencing this contract payment and passed to the `upload` function. The object also contains `publicURL`, which is the HTTP URL where the file will become available for the duration of the contract once uploaded and the `status`.
+
+### pay
+
+Payment for the NanoStore file hosting contract.
+
+#### Parameters
+
+*   `obj` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** All parameters are given in an object. (optional, default `{}`)
+
+    *   `obj.config` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** config object, see config section. (optional, default `CONFIG`)
+    *   `obj.sender` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The sender paymail making the payment.
+    *   `obj.recipient` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The recipient paymail receiving the payment.
+    *   `obj.description` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The description to be used for the payment.
+    *   `obj.orderID` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The reference for the payment of the invoice received for hosting.
+    *   `obj.amount` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** The number of satoshis being paid.
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The pay object, contains the `uploadURL` and the `publicURL` and the `status`'.
 
 ### upload
 
@@ -82,16 +101,14 @@ Uploads a file to NanoStore and pays an invoice, thereby starting the file hosti
 
 #### Parameters
 
-*   `obj` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** All parameters are given in an object.
+*   `obj` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)?** All parameters are given in an object. (optional, default `{}`)
 
-    *   `obj.referenceNumber` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The reference number that was given to you when you called the `invoice` function.
-    *   `obj.transactionHex` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** A Bitcoin SV transaction, in hex string format, which includes the outputs specified by the `invoice` function. It must be signed, and if not already broadcasted, it will be sent to miners by the NanoStore server.
-    *   `obj.file` **File** The file to upload. This is usually obtained by querying for your HTML form's file upload `<input />` tag and referencing `tagElement.files[0]`.
+    *   `obj.uploadURL` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** The external URL where the file is uploaded to host it.
+    *   `obj.publicURL` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** The public URL where the file can be downloaded from.
+    *   `obj.file` **File?** The file to upload. This is usually obtained by querying for your HTML form's file upload `<input />` tag and referencing `tagElement.files[0]`.
     *   `obj.serverURL` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The URL of the NanoStore server to contract with. By default, the Babbage NanoStore server is used. (optional, default `https://nanostore.babbage.systems`)
     *   `obj.onUploadProgress` **[Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)?** A function called with periodic progress updates as the file uploads (optional, default `()=>{}`)
-    *   `obj.inputs`  
-    *   `obj.mapiResponses`  
-    *   `obj.proof`  
+    *   `obj.config`   (optional, default `CONFIG`)
 
 Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The publication object. Fields are `published=true`, `hash` (the UHRP URL of the new file), and `publicURL`, the HTTP URL where the file is published.
 
