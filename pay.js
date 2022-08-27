@@ -35,8 +35,7 @@ module.exports = async ({ config = CONFIG, sender, recipient, description, order
       reference: payment.reference,
       paymail: sender,
       description: 'Confirmation that payment has been made',
-      orderID,
-      amount
+      orderID
     }
   })
   // console.log('pay:', pay)
