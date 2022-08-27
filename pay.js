@@ -25,7 +25,7 @@ module.exports = async ({ config = CONFIG, sender, recipient, description, order
   if (payment.status === 'error') {
     return payment
   }
-  //console.log('payment:', payment)
+  // console.log('payment:', payment)
   const pay = await createSignedRequest({
     config,
     path: '/pay',
