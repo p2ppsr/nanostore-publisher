@@ -34,7 +34,7 @@ module.exports = async ({ config = CONFIG, sender, recipient, description, order
     body: {
       reference: payment.reference,
       paymail: sender,
-      description: 'Confirmation that payment has been made',
+      description,
       orderID
     }
   })
