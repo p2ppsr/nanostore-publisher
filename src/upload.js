@@ -20,7 +20,14 @@ if (typeof window !== 'undefined' && window.FileReader) {
  *
  * @returns {Promise<Object>} The publication object. Fields are `published=true`, `hash` (the UHRP URL of the new file), and `publicURL`, the HTTP URL where the file is published.
  */
-module.exports = async ({ config = CONFIG, uploadURL, publicURL, file, serverURL = `${config.nanostoreURL}`, onUploadProgress = () => { } } = {}) => {
+module.exports = async ({
+  config = CONFIG,
+  uploadURL,
+  publicURL,
+  file,
+  serverURL = `${config.nanostoreURL}`,
+  onUploadProgress = () => { }
+} = {}) => {
   // Upload file to either local storage or external storage depending on serverURL
   // Allow uploads with MiniScribe
   if (serverURL.startsWith('http://localhost')) {
@@ -37,6 +44,7 @@ module.exports = async ({ config = CONFIG, uploadURL, publicURL, file, serverURL
       hash: res.data
     }
   }
+
   // This uploads the file and hashes the file at the same time
   const concurrentResult = await Promise.all([
     put(
