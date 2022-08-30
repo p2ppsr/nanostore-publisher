@@ -1,6 +1,5 @@
 const bsv = require('bsv')
-const Babbage = require('@babbage/sdk')
-const { createAction } = require('@babbage/sdk')
+const { createAction, getPublicKey } = require('@babbage/sdk')
 const createSignedRequest = require('./utils/createSignedRequest')
 const { CONFIG } = require('./defaults')
 
@@ -32,7 +31,7 @@ module.exports = async ({
     .toString('base64')
 
   // Derive the public key used for creating the output script
-  const derivedPublicKey = await Babbage.getPublicKey({
+  const derivedPublicKey = await getPublicKey({
     protocolID: [2, '3241645161d8'],
     keyID: `${derivationPrefix} ${derivationSuffix}`,
     counterparty: recipientPublicKey
