@@ -60,17 +60,16 @@ module.exports = async ({
     config,
     path: '/pay',
     body: {
-      orderID,
+      derivationPrefix,
       transaction: {
         ...payment,
         outputs: [{
           vout: 0,
           satoshis: amount,
-          derivationPrefix,
           derivationSuffix
         }]
       },
-      description
+      orderID
     }
   })
   // console.log('pay:', pay)
