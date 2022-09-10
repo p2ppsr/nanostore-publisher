@@ -25,8 +25,9 @@
   "homepage": "https://github.com/p2ppsr/nanostore-publisher#readme",
   "dependencies": {
     "@babbage/sdk": "^0.3.0",
-    "authrite-js": "^0.1.12",
+    "authrite-js": "^0.1.13",
     "axios": "^0.21.1",
+    "babbage-bsv": "^0.1.0",
     "filereader": "^0.10.3",
     "form-data": "^4.0.0",
     "uhrp-url": "^0.1.3"

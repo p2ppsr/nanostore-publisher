@@ -1,4 +1,4 @@
-const bsv = require('bsv')
+const bsv = require('babbage-bsv')
 const { createAction, getPublicKey } = require('@babbage/sdk')
 const createSignedRequest = require('./utils/createSignedRequest')
 const { CONFIG } = require('./defaults')
