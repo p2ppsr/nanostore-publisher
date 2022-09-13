@@ -1,5 +1,5 @@
 const bsv = require('babbage-bsv')
-
+const { getPublicKey } = require('@babbage/sdk')
 /**
  * Derives an output to pay for the NanoStore file hosting contract.
  *
@@ -35,9 +35,14 @@ module.exports = async ({
     ))
   ).toHex()
   // Return the new output
-  const output = {
-    script,
-    satoshis: amount
+  const paymentInfo = {
+    derivationPrefix,
+    derivationSuffix,
+    derivedPublicKey,
+    output: {
+        script,
+        satoshis: amount
+    }
   }
-  return output
+  return paymentInfo
 }
