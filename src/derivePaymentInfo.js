@@ -40,8 +40,8 @@ module.exports = async ({
     derivationSuffix,
     derivedPublicKey,
     output: {
-        script,
-        satoshis: amount
+      script,
+      satoshis: amount
     }
   }
   return paymentInfo

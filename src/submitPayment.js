@@ -1,17 +1,17 @@
-const bsv = require('babbage-bsv')
-const { createAction, getPublicKey } = require('@babbage/sdk')
 const createSignedRequest = require('./utils/createSignedRequest')
 const { CONFIG } = require('./defaults')
 
 /**
- * Payment for the NanoStore file hosting contract.
+ * Submit a manually-created payment for NanoStore hosting
  *
  * @param {Object} obj All parameters are given in an object.
  * @param {Object} obj.config config object, see config section.
- * @param {String} obj.description The description to be used for the payment.
  * @param {String} obj.orderID The hosting invoice reference.
- * @param {String} obj.recipientPublicKey Public key of the host receiving the payment.
  * @param {Number} obj.amount The number of satoshis being paid.
+ * @param {Object} obj.payment The result of calling createAction which incorporates the payment output for the NanoStore hosting. Object that includes `inputs`, `mapiResponses`, `rawTx`.
+ * @param {Number} obj.vout The output from the Action which corresponds to the payment for NanoStore hosting
+ * @param {String} obj.derivationPrefix The value returned from `derivePaymentInfo`
+ * @param {String} obj.derivationSuffix The value returned from `derivePaymentInfo`
  *
  * @returns {Promise<Object>} The paymentResult object, contains the `uploadURL` and the `publicURL` and the `status`'.
  */
@@ -20,6 +20,7 @@ module.exports = async ({
   orderID,
   amount,
   payment,
+  vout,
   derivationPrefix,
   derivationSuffix
 } = {}) => {
@@ -31,7 +32,7 @@ module.exports = async ({
       transaction: {
         ...payment,
         outputs: [{
-          vout: 0,
+          vout,
           satoshis: amount,
           derivationSuffix
         }]
