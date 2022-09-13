@@ -1,4 +1,3 @@
-
 # nanostore-publisher
 
 Publish UHRP Content with NanoStore
@@ -60,10 +59,14 @@ console.log(response)
 
 *   [invoice](#invoice)
     *   [Parameters](#parameters)
-*   [pay](#pay)
+*   [derivePaymentInfo](#derivepaymentinfo)
     *   [Parameters](#parameters-1)
-*   [upload](#upload)
+*   [submitPayment](#submitpayment)
     *   [Parameters](#parameters-2)
+*   [pay](#pay)
+    *   [Parameters](#parameters-3)
+*   [upload](#upload)
+    *   [Parameters](#parameters-4)
 
 ### invoice
 
@@ -77,7 +80,38 @@ Creates an invoice for a NanoStore file hosting contract.
     *   `obj.fileSize` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** The size of the file you want to host in bytes.
     *   `obj.retentionPeriod` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** The whole number of minutes you want the file to be hosted for.
 
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The invoice object, containing `paymail` address for payment to be sent to, `amount` (satoshis), `ORDER_ID`, for referencing this contract payment and passed to the `upload` function. The object also contains `publicURL`, which is the HTTP URL where the file will become available for the duration of the contract once uploaded and the `status`.
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The invoice object, containing `message` giving details, `identityKey` receipient's private key, `amount` (satoshis), `ORDER_ID`, for referencing this contract payment and passed to the `upload` function. The object also contains `publicURL`, which is the HTTP URL where the file will become available for the duration of the contract once uploaded and the `status`.
+
+### derivePaymentInfo
+
+Derives an output to pay for the NanoStore file hosting contract.
+
+#### Parameters
+
+*   `obj` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** All parameters are given in an object. (optional, default `{}`)
+
+    *   `obj.recipientPublicKey` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Public key of the host receiving the payment.
+    *   `obj.amount` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** The number of satoshis being paid.
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The output object, contains the `script` and the amount of `satoshis`'.
+
+### submitPayment
+
+Submit a manually-created payment for NanoStore hosting
+
+#### Parameters
+
+*   `obj` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** All parameters are given in an object. (optional, default `{}`)
+
+    *   `obj.config` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** config object, see config section. (optional, default `CONFIG`)
+    *   `obj.orderID` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The hosting invoice reference.
+    *   `obj.amount` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** The number of satoshis being paid.
+    *   `obj.payment` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** The result of calling createAction which incorporates the payment output for the NanoStore hosting. Object that includes `inputs`, `mapiResponses`, `rawTx`.
+    *   `obj.vout` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** The output from the Action which corresponds to the payment for NanoStore hosting
+    *   `obj.derivationPrefix` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The value returned from `derivePaymentInfo`
+    *   `obj.derivationSuffix` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The value returned from `derivePaymentInfo`
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The paymentResult object, contains the `uploadURL` and the `publicURL` and the `status`'.
 
 ### pay
 
@@ -88,10 +122,9 @@ Payment for the NanoStore file hosting contract.
 *   `obj` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** All parameters are given in an object. (optional, default `{}`)
 
     *   `obj.config` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** config object, see config section. (optional, default `CONFIG`)
-    *   `obj.sender` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The sender paymail making the payment.
-    *   `obj.recipient` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The recipient paymail receiving the payment.
     *   `obj.description` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The description to be used for the payment.
-    *   `obj.orderID` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The reference for the payment of the invoice received for hosting.
+    *   `obj.orderID` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The hosting invoice reference.
+    *   `obj.recipientPublicKey` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** Public key of the host receiving the payment.
     *   `obj.amount` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** The number of satoshis being paid.
 
 Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The pay object, contains the `uploadURL` and the `publicURL` and the `status`'.
