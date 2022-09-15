@@ -6,50 +6,122 @@ Publish UHRP Content with NanoStore
 
 This package allows you to create Universal Hash Resolution Protocol (UHRP) content publications and hosting contracts for files and data. Since UHRP URLs are content-addressed, they are self-authenticating. Since any UHRP host can advertise the availability of content, discovery is no longer controlled by a trusted third party as is the case with HTTP.
 
-## Usage
+Once you've uploaded, the content is available with [NanoSeek](https://github.com/p2ppsr/nanoseek), which automatically checks the integrity of the data.
+
+## Example Usage
 
 Check out [NanoStore UI](https://github.com/p2ppsr/nanostore-ui) to see a file upload example with React.
 
-The below code relies on the  [Babbage SDK](https://projectbabbage.com/sdk) to pay for a file to be hosted:
+All the example code relies on the [Babbage SDK](https://projectbabbage.com/sdk) to pay for a file to be hosted:
 
 ```js
-const Babbage = require('@babbage/sdk')
+import { invoice, pay, upload } from 'nanostore-publisher'
 
-(async () => {
-// Get a reference to a File element somehow, or create one if using Node
-const file = document.getElementById('file_upload_form_input').files[0]
+// First, get "file" from an HTML file upload input.
+// If you use React, get "file" from your form in the normal React-y way :)
+const file = document.getElementById('upload').files[0]
+
+// Decide how long the file is to be hosted on NanoStore.
+// This is a number of minutes.
+const hostingMinutes = 60 * 24 * 30 // For example, 30 days
+
+// If not provided, the default nanostore URL is 'https://nanostore.babbage.systems'
 const serverURL = 'https://nanostore.babbage.systems'
 
-// Send an invoice to the server to get transaction outputs
-const inv = await invoice({
+// Get an invoice for a file with this size and hosting duration
+const invoice = await invoice({
   fileSize: file.size,
-  retentionPeriod: 525600, // Host for one year
-  serverURL
+  retentionPeriod: hostingMinutes,
+  config: {
+    nanostoreURL: serverURL
+  }
 })
 
-// Create an Action with Babbage SDK to pay the invoice
-const tx = await Babbage.createAction({
-  outputs: inv.outputs.map(x => ({
-    satoshis: x.amount,
-    script: x.outputScript
-  })),
-  description: 'Upload with NanoStore'
+// Automatically pay the invoice with the Babbage SDK
+const pay = await pay({
+  config: {
+    nanostoreURL: serverURL
+  },
+  description: 'NanoStore Publisher Example', // Shown to the Babbage user
+  orderID: invoice.ORDER_ID,
+  recipientPublicKey: invoice.identityKey,
+  amount: invoice.amount // This is the cost in satoshis
 })
 
-// Upload the file and submit the payment of the invoice
-const response = await upload({
-  referenceNumber: inv.referenceNumber,
-  transactionHex: tx.rawTransaction,
-  mapiResponses: tx.mapiResponses,
-  inputs: tx.inputs,
+// After the payment, the file can be uploaded to NanoStore
+const upload = await upload({
+  config: {
+    nanostoreURL: serverURL
+  },
+  uploadURL: pay.uploadURL,
+  publicURL: invoice.publicURL,
   file,
-  serverURL
+  serverURL,
+  onUploadProgress: prog => { // You can get progress updates
+    console.log(
+      'Progress:',
+      parseInt((prog.loaded / prog.total) * 100)
+    )
+  }
 })
 
-// The file is now published
-console.log(response)
-})()
+// You'll get the UHRP hash and the public URL after upload
+console.log({
+  hash: upload.hash,
+  publicURL: upload.publicURL
+})
 ```
+
+### Invoice, Pay and Upload
+
+As you can see in the above code, there are three phases to the publication of content with this library. First, an invoice is created where you specify the file size and the retention period of the content you are uploading. Then, you pay for the content, and finally, the content is uploaded to NanoStore.
+
+Here's a more customized example. We've separated the "pay" phase into its `derivePaymentInfo` and `submitPayment` component parts, allowing for a custom transaction to be constructed. This is useful if, for example, there is a need for multiple outputs going to different places:
+
+```js
+import [ invoice, derivePaymentInfo, submitPayment, upload ] from 'nanostore-publisher'
+import { createAction } from '@babbage/sdk'
+
+// Create an invoice, like normal
+const invoice = await invoice({
+  fileSize: file.size,
+  retentionPeriod: 86400
+})
+
+// Get the information needed for making the payment
+const paymentInfo = await derivePaymentInfo({
+  recipientPublicKey: invoice.identityKey,
+  amount: invoice.amount // This is the cost in satoshis
+})
+
+// Create a custom transaction, potentially with other outputs
+const payment = await createAction({
+  description: 'Custom payment',
+  outputs: [
+    { script: '016a', satoshis: 1 }, // ...custom outputs
+    paymentInfo.output               // payment output
+  ]
+})
+
+// Submit the payment after the transaction is complete
+const payment = await submitPayment({
+  orderID: invoice.ORDER_ID,
+  amount: invoice.amount,
+  payment,
+  derivationPrefix: paymentInfo.derivationPrefix,
+  derivationSuffix: paymentInfo.derivationSuffix,
+  vout: 1 // The payment output was at index 1 in the outputs array
+})
+
+// Upload the file as normal
+const upload = await upload({
+  uploadURL: pay.uploadURL,
+  publicURL: invoice.publicURL,
+  file
+})
+```
+
+Note, in the above example, that the two low-level payment functions **replace** the high-level `pay` function.
 
 ## API
 
@@ -84,7 +156,9 @@ Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/
 
 ### derivePaymentInfo
 
-Derives an output to pay for the NanoStore file hosting contract.
+Derives an output to pay for the NanoStore file hosting contract. After
+payment, use `submitPayment` to complete the payment process and get an
+upload URL.
 
 #### Parameters
 
@@ -97,7 +171,11 @@ Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/
 
 ### submitPayment
 
-Submit a manually-created payment for NanoStore hosting
+Submit a manually-created payment for NanoStore hosting. Obtain an output
+that must be included in the transaction by using `derivePaymentInfo`, and
+then provide the Everett envelope for the transaction here. Also use the
+`vout` parameter to specify which output in your transaction has paid the
+invoice.
 
 #### Parameters
 
@@ -115,7 +193,8 @@ Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/
 
 ### pay
 
-Payment for the NanoStore file hosting contract.
+High-level function to automatically pay an invoice, using a Babbage SDK
+`createAction` call.
 
 #### Parameters
 

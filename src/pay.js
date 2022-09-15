@@ -4,7 +4,8 @@ const createSignedRequest = require('./utils/createSignedRequest')
 const { CONFIG } = require('./defaults')
 
 /**
- * Payment for the NanoStore file hosting contract.
+ * High-level function to automatically pay an invoice, using a Babbage SDK 
+ * `createAction` call.
  *
  * @param {Object} obj All parameters are given in an object.
  * @param {Object} obj.config config object, see config section.

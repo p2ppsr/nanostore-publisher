@@ -2,7 +2,11 @@ const createSignedRequest = require('./utils/createSignedRequest')
 const { CONFIG } = require('./defaults')
 
 /**
- * Submit a manually-created payment for NanoStore hosting
+ * Submit a manually-created payment for NanoStore hosting. Obtain an output 
+ * that must be included in the transaction by using `derivePaymentInfo`, and 
+ * then provide the Everett envelope for the transaction here. Also use the 
+ * `vout` parameter to specify which output in your transaction has paid the 
+ * invoice.
  *
  * @param {Object} obj All parameters are given in an object.
  * @param {Object} obj.config config object, see config section.

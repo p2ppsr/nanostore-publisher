@@ -1,7 +1,9 @@
 const bsv = require('babbage-bsv')
 const { getPublicKey } = require('@babbage/sdk')
 /**
- * Derives an output to pay for the NanoStore file hosting contract.
+ * Derives an output to pay for the NanoStore file hosting contract. After 
+ * payment, use `submitPayment` to complete the payment process and get an 
+ * upload URL.
  *
  * @param {Object} obj All parameters are given in an object.
  * @param {String} obj.recipientPublicKey Public key of the host receiving the payment.
