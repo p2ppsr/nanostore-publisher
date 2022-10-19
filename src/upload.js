@@ -34,7 +34,7 @@ module.exports = async ({
     const FormData = require('form-data')
     const formData = new FormData()
     formData.append('file', file)
-    const res = await post(`${serverURL}/pay`, formData, {
+    const res = await post(`${serverURL}/upload`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     // console.log('res:', res)
