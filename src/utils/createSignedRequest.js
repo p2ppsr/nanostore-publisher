@@ -1,7 +1,7 @@
 const AuthriteClient = require('./AuthriteClient')
 
 module.exports = async ({ config, path, body }) => {
-  // console.log('createSignedRequest():config:', config)
+  console.log('createSignedRequest():config:', config)
   let result = await new AuthriteClient().request(
     `${config.nanostoreURL}${path}`, {
       body,
