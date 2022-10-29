@@ -1,6 +1,6 @@
 {
   "name": "nanostore-publisher",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Publish UHRP Content with NanoStore",
   "main": "src/index.js",
   "scripts": {
@@ -24,8 +24,8 @@
   },
   "homepage": "https://github.com/p2ppsr/nanostore-publisher#readme",
   "dependencies": {
-    "@babbage/sdk": "^0.3.0",
-    "authrite-js": "^0.2.5",
+    "@babbage/sdk": "^0.4.6",
+    "authrite-js": "^0.2.8",
     "axios": "^0.21.1",
     "babbage-bsv": "^0.1.0",
     "filereader": "^0.10.3",
