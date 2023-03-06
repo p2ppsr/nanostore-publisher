@@ -4,7 +4,7 @@ const createSignedRequest = require('./utils/createSignedRequest')
 const { CONFIG } = require('./defaults')
 
 /**
- * High-level function to automatically pay an invoice, using a Babbage SDK 
+ * High-level function to automatically pay an invoice, using a Babbage SDK
  * `createAction` call.
  *
  * @param {Object} obj All parameters are given in an object.
@@ -44,12 +44,18 @@ module.exports = async ({
       bsv.PublicKey.fromString(derivedPublicKey)
     ))
   ).toHex()
+
   const payment = await createAction({
-    description,
     outputs: [{
       script,
-      satoshis: amount
-    }]
+      satoshis: amount,
+      basket: 'nanostore', // ?
+      description: 'Payment for file hosting'
+    }],
+    description,
+    labels: ['nanostore'],
+    topics: ['UHRP']
+    // originator?
   })
   if (payment.status === 'error') {
     const e = new Error(payment.description)
