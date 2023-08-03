@@ -49,16 +49,16 @@ module.exports = async ({
   const concurrentResult = await Promise.all([
     put(
       uploadURL,
-      file,
+      file.file,
       { headers: { 'Content-Type': file.type }, onUploadProgress }
     ),
-    new Promise((resolve, reject) => {
+    new Promise((resolve, reject) => { // TODO: Add check for env
       try {
-        const fr = new FileReader()
-        fr.addEventListener('load', () => {
-          resolve(getURLForFile(Buffer.from(fr.result)))
-        })
-        fr.readAsArrayBuffer(file)
+        // const fr = new FileReader()
+        // fr.addEventListener('load', () => {
+        resolve(getURLForFile(file.file))
+        // })
+        // fr.readAsArrayBuffer(file.file)
       } catch (e) {
         reject(e)
       }

@@ -3,5 +3,6 @@ module.exports = {
   derivePaymentInfo: require('./derivePaymentInfo'),
   submitPayment: require('./submitPayment'),
   pay: require('./pay'),
-  upload: require('./upload')
+  upload: require('./upload'),
+  publishFile: require('./publishFile')
 }
