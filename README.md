@@ -128,6 +128,7 @@ Note, in the above example, that the two low-level payment functions **replace**
 If you simply want to publish a single file with default behavior, you can make use of the `publishFile` function.
 
 **Example Usage in a React UI**
+
 ```javascript
  // Publish the uploaded file
 const uploadResult = await publishFile({
@@ -262,11 +263,11 @@ High-level function to automatically pay an invoice, using a Babbage SDK
 *   `obj` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** All parameters are given in an object. (optional, default `{}`)
 
     *   `obj.config` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** config object, see config section. (optional, default `CONFIG`)
-    *   `obj.file` **(File | [object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object))** the File to upload given as File or custom object with the necessary data params (see below spec)
+    *   `obj.file` **(File | [object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object))** the File to upload given as File or custom object with the necessary data params (see below)
     *   `obj.retentionPeriod` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** how long the file should be retained
     *   `obj.progressTracker` **[function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)** function to provide updates on upload progress (optional, default `()=>{}`)
 
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The pay object, contains the `uploadURL` and the `publicURL` and the `status`'.
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)>** The upload object, contains the `hash` and the `publicURL` and the `status`'.
 
 ```javascript
 // Example compatible File object for publishing file data from a Buffer
