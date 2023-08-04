@@ -14,7 +14,7 @@ if (typeof window !== 'undefined' && window.FileReader) {
  * @param {Object} [obj] All parameters are given in an object.
  * @param {String} [obj.uploadURL] The external URL where the file is uploaded to host it.
  * @param {String} [obj.publicURL] The public URL where the file can be downloaded from.
- * @param {File} [obj.file] The file to upload. This is usually obtained by querying for your HTML form's file upload `<input />` tag and referencing `tagElement.files[0]`.
+ * @param {File | object} [obj.file] The file to upload. This is usually obtained by querying for your HTML form's file upload `<input />` tag and referencing `tagElement.files[0]`. Or using custom object as defined in publishFile.js
  * @param {String} [obj.serverURL=https://nanostore.babbage.systems] The URL of the NanoStore server to contract with. By default, the Babbage NanoStore server is used.
  * @param {Function} [obj.onUploadProgress] A function called with periodic progress updates as the file uploads
  *
@@ -37,7 +37,7 @@ module.exports = async ({
     const res = await post(`${serverURL}/pay`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
-    // console.log('res:', res)
+
     return {
       published: true,
       publicURL: `${serverURL}/data/${res.data}`,
@@ -49,16 +49,21 @@ module.exports = async ({
   const concurrentResult = await Promise.all([
     put(
       uploadURL,
-      file.file,
+      file.dataAsBuffer ? file.dataAsBuffer : file, // Supports Buffer and file uploading
       { headers: { 'Content-Type': file.type }, onUploadProgress }
     ),
-    new Promise((resolve, reject) => { // TODO: Add check for env
+    new Promise((resolve, reject) => {
       try {
-        // const fr = new FileReader()
-        // fr.addEventListener('load', () => {
-        resolve(getURLForFile(file.file))
-        // })
-        // fr.readAsArrayBuffer(file.file)
+        // Support both Browser and Node env
+        if (file.dataAsBuffer) {
+          resolve(getURLForFile(file.dataAsBuffer))
+        } else {
+          const fr = new FileReader()
+          fr.addEventListener('load', () => {
+            resolve(getURLForFile(Buffer.from(fr.result)))
+          })
+          fr.readAsArrayBuffer(file)
+        }
       } catch (e) {
         reject(e)
       }

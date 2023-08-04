@@ -1,23 +1,18 @@
-// const { CONFIG } = require('./defaults')
+const { CONFIG } = require('./defaults')
 const invoice = require('./invoice')
 const pay = require('./pay')
 const upload = require('./upload')
 
-const fs = require('fs')
-const util = require('util')
-const path = require('path')
-const mime = require('mime')
+/**
+ * Example compatible File object for publishing file data from a Buffer
 
-const imageName = 'record.png'
-const currentDirectory = process.cwd()
-const imagePath = path.resolve(currentDirectory, imageName)
-const readFileAsync = util.promisify(fs.readFile)
+    const fileToUpload = {
+      dataAsBuffer,
+      size: dataAsBuffer.length,
+      type: 'image/png' // use 'mime' if necessary
+    }
 
-const CONFIG = {
-  nanostoreURL: 'https://staging-nanostore.babbage.systems',
-  clientPrivateKey: '95219e536fc9c3cb54594996d7e3e343bf503598f7bedced738642b73c63f392',
-  dojoURL: 'https://staging-dojo.babbage.systems'
-}
+ */
 
 /**
  * High-level function to automatically pay an invoice, using a Babbage SDK
@@ -25,7 +20,7 @@ const CONFIG = {
  *
  * @param {Object} obj All parameters are given in an object.
  * @param {Object} obj.config config object, see config section.
- * @param {File} obj.file - the File to upload
+ * @param {File | object} obj.file - the File to upload given as File or custom object with the necessary data params (see above spec)
  * @param {number} obj.retentionPeriod - how long the file should be retained
  * @param {function} obj.progressTracker - function to provide updates on upload progress
  *
@@ -50,21 +45,10 @@ module.exports = async ({
       throw e
     }
 
-    debugger
-    file = await readFileAsync(imagePath)
-
-    // Figure out if this file is a Buffer or a File type
-    let fileSize
-    if (!file.size) {
-      fileSize = file.length
-    } else {
-      fileSize = file.size
-    }
-
     // Get a payment invoice for the file to upload
     const invoiceResult = await invoice({
       config,
-      fileSize,
+      fileSize: file.size,
       retentionPeriod
     })
 
@@ -84,10 +68,7 @@ module.exports = async ({
       },
       uploadURL: payResult.uploadURL,
       publicURL: invoiceResult.publicURL,
-      file: {
-        file,
-        type: mime.getType(imageName)
-      },
+      file,
       serverURL: config.nanostoreURL,
       onUploadProgress: prog => progressTracker(prog)
     })
