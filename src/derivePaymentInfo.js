@@ -1,8 +1,11 @@
 const bsv = require('babbage-bsv')
 const { getPublicKey } = require('@babbage/sdk')
+const { CONFIG } = require('./defaults')
+const { getPaymentAddress } = require('sendover')
+
 /**
- * Derives an output to pay for the NanoStore file hosting contract. After 
- * payment, use `submitPayment` to complete the payment process and get an 
+ * Derives an output to pay for the NanoStore file hosting contract. After
+ * payment, use `submitPayment` to complete the payment process and get an
  * upload URL.
  *
  * @param {Object} obj All parameters are given in an object.
@@ -12,6 +15,7 @@ const { getPublicKey } = require('@babbage/sdk')
  * @returns {Promise<Object>} The output object, contains the `script` and the amount of `satoshis`'.
  */
 module.exports = async ({
+  config = CONFIG,
   recipientPublicKey,
   amount
 } = {}) => {
@@ -23,12 +27,22 @@ module.exports = async ({
     .randomBytes(10)
     .toString('base64')
 
-  // Derive the public key used for creating the output script
-  const derivedPublicKey = await getPublicKey({
-    protocolID: [2, '3241645161d8'],
-    keyID: `${derivationPrefix} ${derivationSuffix}`,
-    counterparty: recipientPublicKey
-  })
+  // Derive the public key used for creating the output script using a privateKey or the SDK
+  let derivedPublicKey
+  if (config.clientPrivateKey) {
+    derivedPublicKey = getPaymentAddress({
+      senderPrivateKey: config.clientPrivateKey,
+      recipientPublicKey: recipientPublicKey,
+      invoiceNumber: `2-3241645161d8-${derivationPrefix} ${derivationSuffix}`,
+      returnType: 'publicKey'
+    })
+  } else {
+    derivedPublicKey = await getPublicKey({
+      protocolID: [2, '3241645161d8'],
+      keyID: `${derivationPrefix} ${derivationSuffix}`,
+      counterparty: recipientPublicKey
+    })
+  }
 
   // Create an output script that can only be unlocked with the corresponding derived private key
   const script = new bsv.Script(
@@ -43,7 +57,9 @@ module.exports = async ({
     derivedPublicKey,
     output: {
       script,
-      satoshis: amount
+      satoshis: amount,
+      basket: 'nanostore', // ?
+      description: 'Payment for file hosting'
     }
   }
   return paymentInfo
