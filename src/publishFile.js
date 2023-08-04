@@ -3,21 +3,18 @@ const invoice = require('./invoice')
 const pay = require('./pay')
 const upload = require('./upload')
 
-/**
- * Example compatible File object for publishing file data from a Buffer
-
-    const fileToUpload = {
-      dataAsBuffer,
-      size: dataAsBuffer.length,
-      type: 'image/png' // use 'mime' if necessary
-    }
-
- */
+// Example compatible File object for publishing file data from a Buffer
+// const fileToUpload = {
+//   dataAsBuffer,
+//   size: dataAsBuffer.length,
+//   type: 'image/png' // use 'mime' if necessary
+// }
 
 /**
  * High-level function to automatically pay an invoice, using a Babbage SDK
- * `createAction` call.
+ * `createAction` call, or a clientPrivateKey when in a server environment.
  *
+ * @public
  * @param {Object} obj All parameters are given in an object.
  * @param {Object} obj.config config object, see config section.
  * @param {File | object} obj.file - the File to upload given as File or custom object with the necessary data params (see above spec)
