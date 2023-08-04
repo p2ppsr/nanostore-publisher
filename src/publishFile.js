@@ -67,7 +67,7 @@ module.exports = async ({
       publicURL: invoiceResult.publicURL,
       file,
       serverURL: config.nanostoreURL,
-      onUploadProgress: prog => progressTracker(prog)
+      onUploadProgress: progressTracker
     })
     return uploadResult
   } catch (e) {
