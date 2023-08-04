@@ -37,7 +37,7 @@ module.exports = async ({
     const ninja = new Ninja({
       privateKey: config.clientPrivateKey,
       config: {
-        dojoURL: config.dojoURL // ?
+        dojoURL: config.dojoURL
       }
     })
     payment = await ninja.getTransactionWithOutputs({
