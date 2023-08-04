@@ -21,7 +21,7 @@ const upload = require('./upload')
  * @param {number} obj.retentionPeriod - how long the file should be retained
  * @param {function} obj.progressTracker - function to provide updates on upload progress
  *
- * @returns {Promise<Object>} The pay object, contains the `uploadURL` and the `publicURL` and the `status`'.
+ * @returns {Promise<Object>} The upload object, contains the `hash` and the `publicURL` and the `status`'.
  */
 module.exports = async ({
   config = CONFIG,
