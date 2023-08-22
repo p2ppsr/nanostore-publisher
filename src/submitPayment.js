@@ -1,11 +1,11 @@
-const createSignedRequest = require('./utils/createSignedRequest')
+const { AuthriteClient } = require('authrite-js')
 const { CONFIG } = require('./defaults')
 
 /**
- * Submit a manually-created payment for NanoStore hosting. Obtain an output 
- * that must be included in the transaction by using `derivePaymentInfo`, and 
- * then provide the Everett envelope for the transaction here. Also use the 
- * `vout` parameter to specify which output in your transaction has paid the 
+ * Submit a manually-created payment for NanoStore hosting. Obtain an output
+ * that must be included in the transaction by using `derivePaymentInfo`, and
+ * then provide the Everett envelope for the transaction here. Also use the
+ * `vout` parameter to specify which output in your transaction has paid the
  * invoice.
  *
  * @param {Object} obj All parameters are given in an object.
@@ -28,21 +28,18 @@ module.exports = async ({
   derivationPrefix,
   derivationSuffix
 } = {}) => {
-  const paymentResult = await createSignedRequest({
-    config,
-    path: '/pay',
-    body: {
-      derivationPrefix,
-      transaction: {
-        ...payment,
-        outputs: [{
-          vout,
-          satoshis: amount,
-          derivationSuffix
-        }]
-      },
-      orderID
-    }
+  const client = new AuthriteClient(config.nanostoreURL, { clientPrivateKey: config.clientPrivateKey } = undefined)
+  const paymentResult = await client.createSignedRequest('/pay', {
+    derivationPrefix,
+    transaction: {
+      ...payment,
+      outputs: [{
+        vout,
+        satoshis: amount,
+        derivationSuffix
+      }]
+    },
+    orderID
   })
   if (paymentResult.status === 'error') {
     const e = new Error(paymentResult.description)

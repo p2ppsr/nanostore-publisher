@@ -1,10 +1,11 @@
-const bsv = require('babbage-bsv')
-const { createAction, getPublicKey } = require('@babbage/sdk')
-const createSignedRequest = require('./utils/createSignedRequest')
+const { createAction } = require('@babbage/sdk')
 const { CONFIG } = require('./defaults')
+const { AuthriteClient } = require('authrite-js')
+const Ninja = require('utxoninja')
+const derivePaymentInfo = require('./derivePaymentInfo')
 
 /**
- * High-level function to automatically pay an invoice, using a Babbage SDK 
+ * High-level function to automatically pay an invoice, using a Babbage SDK
  * `createAction` call.
  *
  * @param {Object} obj All parameters are given in an object.
@@ -23,57 +24,58 @@ module.exports = async ({
   recipientPublicKey,
   amount
 } = {}) => {
-  // Pay the host for storing the file, this return the txid.
-  const derivationPrefix = require('crypto')
-    .randomBytes(10)
-    .toString('base64')
-  const derivationSuffix = require('crypto')
-    .randomBytes(10)
-    .toString('base64')
-
-  // Derive the public key used for creating the output script
-  const derivedPublicKey = await getPublicKey({
-    protocolID: [2, '3241645161d8'],
-    keyID: `${derivationPrefix} ${derivationSuffix}`,
-    counterparty: recipientPublicKey
-  })
-
-  // Create an output script that can only be unlocked with the corresponding derived private key
-  const script = new bsv.Script(
-    bsv.Script.fromAddress(bsv.Address.fromPublicKey(
-      bsv.PublicKey.fromString(derivedPublicKey)
-    ))
-  ).toHex()
-  const payment = await createAction({
-    description,
-    outputs: [{
-      script,
-      satoshis: amount
-    }]
-  })
-  if (payment.status === 'error') {
-    const e = new Error(payment.description)
-    e.code = payment.code
-    throw e
-  }
-  // console.log('payment:', payment)
-  const pay = await createSignedRequest({
+  // Derive payment information
+  const paymentInfo = await derivePaymentInfo({
     config,
-    path: '/pay',
-    body: {
-      derivationPrefix,
-      transaction: {
-        ...payment,
-        outputs: [{
-          vout: 0,
-          satoshis: amount,
-          derivationSuffix
-        }]
-      },
-      orderID
-    }
+    recipientPublicKey,
+    amount
   })
-  // console.log('pay:', pay)
+
+  let payment
+  if (config.clientPrivateKey) {
+    // Create a new transaction with Ninja which pays the output
+    const ninja = new Ninja({
+      privateKey: config.clientPrivateKey,
+      config: {
+        dojoURL: config.dojoURL
+      }
+    })
+    payment = await ninja.getTransactionWithOutputs({
+      outputs: [paymentInfo.output],
+      note: 'Payment for file hosting'
+    })
+  } else {
+    payment = await createAction({
+      outputs: [paymentInfo.output],
+      description,
+      labels: ['nanostore'],
+      topics: ['UHRP']
+      // originator?
+    })
+    if (payment.status === 'error') {
+      const e = new Error(payment.description)
+      e.code = payment.code
+      throw e
+    }
+  }
+
+  // Initialize a new AuthriteClient with SDK or private key signing strategy depending on the config
+  const client = new AuthriteClient(config.nanostoreURL, (config && config.clientPrivateKey) ? { clientPrivateKey: config.clientPrivateKey } : undefined)
+
+  // Make the pay request
+  const pay = await client.createSignedRequest('/pay', {
+    derivationPrefix: paymentInfo.derivationPrefix,
+    transaction: {
+      ...payment,
+      outputs: [{
+        vout: 0,
+        satoshis: amount,
+        derivationSuffix: paymentInfo.derivationSuffix
+      }]
+    },
+    orderID
+  })
+
   if (pay.status === 'error') {
     const e = new Error(pay.description)
     e.code = pay.code
