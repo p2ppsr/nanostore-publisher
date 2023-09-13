@@ -1,7 +1,7 @@
 const { createAction } = require('@babbage/sdk')
 const { CONFIG } = require('./defaults')
 const { AuthriteClient } = require('authrite-js')
-const Ninja = require('utxoninja')
+const { Ninja } = require('ninja-base')
 const derivePaymentInfo = require('./derivePaymentInfo')
 
 /**
