@@ -7,7 +7,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "standard --fix .",
-    "doc": "documentation readme src/index.js --section=API"
+    "doc": "documentation readme src/index.js --section=API",
+    "tonpm": "npm run tonone && npm i ninja-base --silent",
+    "tonone": "npm remove ninja-base --silent"
   },
   "repository": {
     "type": "git",
