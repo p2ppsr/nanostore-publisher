@@ -8,8 +8,8 @@
     "test:watch": "jest --watch",
     "lint": "standard --fix .",
     "doc": "documentation readme src/index.js --section=API",
-    "tonpm": "npm run tonone && npm i ninja-base --silent",
-    "tonone": "npm remove ninja-base --silent"
+    "tonpm": "npm run tonone && npm i ninja-base @babbage/sdk authrite-js babbage-bsv --silent",
+    "tonone": "npm remove ninja-base @babbage/sdk authrite-js babbage-bsv --silent"
   },
   "repository": {
     "type": "git",
