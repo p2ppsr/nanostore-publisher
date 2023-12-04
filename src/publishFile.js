@@ -42,7 +42,7 @@ module.exports = async ({
       throw e
     }
 
-    debugger;
+    //debugger;
 
     // Get a payment invoice for the file to upload
     const invoiceResult = await invoice({
@@ -51,7 +51,7 @@ module.exports = async ({
       retentionPeriod
     })
 
-    debugger;
+    //debugger;
 
     // Make a payment
     const payResult = await pay({
@@ -62,7 +62,7 @@ module.exports = async ({
       amount: invoiceResult.amount
     })
 
-    debugger;
+    //debugger;
 
     // Upload the file after payment as completed
     const uploadResult = await upload({
@@ -76,7 +76,7 @@ module.exports = async ({
       onUploadProgress: progressTracker
     })
 
-    debugger;
+    //debugger;
 
     return uploadResult
   } catch (e) {
