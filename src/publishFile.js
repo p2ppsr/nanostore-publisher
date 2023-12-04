@@ -42,12 +42,16 @@ module.exports = async ({
       throw e
     }
 
+    debugger;
+
     // Get a payment invoice for the file to upload
     const invoiceResult = await invoice({
       config,
       fileSize: file.size,
       retentionPeriod
     })
+
+    debugger;
 
     // Make a payment
     const payResult = await pay({
@@ -57,6 +61,8 @@ module.exports = async ({
       recipientPublicKey: invoiceResult.identityKey,
       amount: invoiceResult.amount
     })
+
+    debugger;
 
     // Upload the file after payment as completed
     const uploadResult = await upload({
@@ -69,6 +75,9 @@ module.exports = async ({
       serverURL: config.nanostoreURL,
       onUploadProgress: progressTracker
     })
+
+    debugger;
+
     return uploadResult
   } catch (e) {
     console.error(e)
