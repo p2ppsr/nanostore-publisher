@@ -7,9 +7,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "standard --fix .",
-    "doc": "documentation readme src/index.js --section=API",
-    "tonpm": "npm run tonone && npm i authrite-js ninja-base @babbage/sdk authrite-js babbage-bsv --silent",
-    "tonone": "npm remove authrite-js ninja-base @babbage/sdk authrite-js babbage-bsv --silent"
+    "doc": "documentation readme src/index.js --section=API"
   },
   "repository": {
     "type": "git",
