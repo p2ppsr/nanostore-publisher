@@ -2,6 +2,7 @@ const bsv = require('babbage-bsv')
 const { getPublicKey } = require('@babbage/sdk')
 const { CONFIG } = require('./defaults')
 const { getPaymentAddress } = require('sendover')
+const { invoice3241645161d8 } = require('ninja-base')
 
 /**
  * Derives an output to pay for the NanoStore file hosting contract. After
@@ -33,7 +34,7 @@ module.exports = async ({
     derivedPublicKey = getPaymentAddress({
       senderPrivateKey: config.clientPrivateKey,
       recipientPublicKey: recipientPublicKey,
-      invoiceNumber: `2-3241645161d8-${derivationPrefix} ${derivationSuffix}`,
+      invoiceNumber: invoice3241645161d8(derivationPrefix, derivationSuffix),
       returnType: 'publicKey'
     })
   } else {
