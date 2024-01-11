@@ -30,7 +30,7 @@
     "babbage-bsv": "^0.2.4",
     "filereader": "^0.10.3",
     "form-data": "^4.0.0",
-    "ninja-base": "^0.2.116",
+    "ninja-base": "^0.2.117",
     "uhrp-url": "^0.1.10"
   },
   "devDependencies": {
