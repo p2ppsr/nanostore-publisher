@@ -28,7 +28,7 @@ module.exports = async ({
   derivationPrefix,
   derivationSuffix
 } = {}) => {
-  const client = new AuthriteClient(config.nanostoreURL, { clientPrivateKey: config.clientPrivateKey } = undefined)
+  const client = new AuthriteClient(config.nanostoreURL, { clientPrivateKey: config.clientPrivateKey })
   const paymentResult = await client.createSignedRequest('/pay', {
     derivationPrefix,
     transaction: {
