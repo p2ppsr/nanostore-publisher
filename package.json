@@ -1,6 +1,6 @@
 {
   "name": "nanostore-publisher",
-  "version": "0.1.60",
+  "version": "0.1.61",
   "description": "Publish UHRP Content with NanoStore",
   "main": "src/index.js",
   "scripts": {
