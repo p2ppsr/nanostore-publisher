@@ -1,4 +1,4 @@
-const { createAction } = require('@babbage/sdk')
+const { createAction } = require('@babbage/sdk-ts')
 const { CONFIG } = require('./defaults')
 const { AuthriteClient } = require('authrite-js')
 const { Ninja } = require('ninja-base')

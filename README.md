@@ -80,7 +80,7 @@ Here's a more customized example. We've separated the "pay" phase into its `deri
 
 ```js
 import [ invoice, derivePaymentInfo, submitPayment, upload ] from 'nanostore-publisher'
-import { createAction } from '@babbage/sdk'
+import { createAction } from '@babbage/sdk-ts'
 
 // Create an invoice, like normal
 const invoice = await invoice({

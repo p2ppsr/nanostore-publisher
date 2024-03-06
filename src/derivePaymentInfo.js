@@ -1,5 +1,5 @@
 const bsv = require('babbage-bsv')
-const { getPublicKey } = require('@babbage/sdk')
+const { getPublicKey } = require('@babbage/sdk-ts')
 const { CONFIG } = require('./defaults')
 const { getPaymentAddress } = require('sendover')
 const { invoice3241645161d8 } = require('ninja-base')
