@@ -1,11 +1,10 @@
-import axios from 'axios';
-import { getURLForFile } from 'uhrp-url';
-import { CONFIG } from './defaults';
-import FormData from 'form-data';
-import { Config, UploadResult } from './types/types';
-import { File as CustomFile } from './types/types';
-import { Buffer } from 'buffer';
-import fs from 'fs';
+import axios from 'axios'
+import { getURLForFile } from 'uhrp-url'
+import { CONFIG } from './defaults'
+import FormData from 'form-data'
+import { Config, UploadResult, File as CustomFile } from './types/types'
+import { Buffer } from 'buffer'
+import fs from 'fs'
 
 // Add this line:
 type File = CustomFile | globalThis.File;
@@ -19,16 +18,16 @@ export interface UploadParams {
   onUploadProgress?: (progressEvent: any) => void;
 }
 
-let FileReader: typeof globalThis.FileReader;
+let FileReader: typeof globalThis.FileReader
 if (typeof window !== 'undefined' && window.FileReader) {
-  FileReader = window.FileReader;
+  FileReader = window.FileReader
 } else {
   // Custom FileReader-like implementation for Node.js
   FileReader = class {
     static readAsArrayBuffer(file: Buffer): Promise<ArrayBuffer> {
-      return Promise.resolve(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength));
+      return Promise.resolve(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength))
     }
-  } as any;
+  } as any
 }
 
 /**
@@ -54,18 +53,18 @@ export async function upload({
   // Upload file to either local storage or external storage depending on serverURL
   // Allow uploads with MiniScribe
   if (serverURL.startsWith('http://localhost')) {
-    const formData = new FormData();
-    formData.append('file', file as any);
+    const formData = new FormData()
+    formData.append('file', file as any)
     const res = await axios.post(`${serverURL}/pay`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    })
 
     return {
       published: true,
       publicURL: `${serverURL}/data/${res.data}`,
       hash: res.data,
       status: 'success'
-    };
+    }
   }
 
   // This uploads the file and hashes the file at the same time
@@ -79,47 +78,47 @@ export async function upload({
       try {
         // Support both Browser and Node env
         if ('dataAsBuffer' in file && file.dataAsBuffer) {
-          resolve(getURLForFile(file.dataAsBuffer));
+          resolve(getURLForFile(file.dataAsBuffer))
         } else if (file instanceof Blob) {
-          const fr = new FileReader();
+          const fr = new FileReader()
           fr.addEventListener('load', () => {
-            resolve(getURLForFile(Buffer.from(fr.result as ArrayBuffer)));
-          });
-          fr.readAsArrayBuffer(file as Blob);
+            resolve(getURLForFile(Buffer.from(fr.result as ArrayBuffer)))
+          })
+          fr.readAsArrayBuffer(file as Blob)
         }
       } catch (e) {
-        reject(e);
+        reject(e)
       }
     })
-  ]);
+  ])
   return {
     published: true,
     publicURL,
     hash: concurrentResult[1],
     status: 'success' // Add this line
-  };
+  }
 }
 
 function readFile(file: File): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = (event) => {
       if (event.target && event.target.result) {
-        resolve(event.target.result as ArrayBuffer);
+        resolve(event.target.result as ArrayBuffer)
       } else {
-        reject(new Error('Failed to read file'));
+        reject(new Error('Failed to read file'))
       }
-    };
-    reader.onerror = (error) => reject(error);
-    reader.readAsArrayBuffer(file as Blob);
-  });
+    }
+    reader.onerror = (error) => reject(error)
+    reader.readAsArrayBuffer(file as Blob)
+  })
 }
 
 async function uploadFile(file: File) {
   try {
-    const content = await readFile(file);
+    const content = await readFile(file)
     // Process the file content...
   } catch (error) {
-    console.error('Error reading file:', error);
+    console.error('Error reading file:', error)
   }
 }

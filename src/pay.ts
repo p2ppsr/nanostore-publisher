@@ -1,9 +1,9 @@
-import { createAction, CreateActionParams } from '@babbage/sdk-ts';
-import { CONFIG } from './defaults';
-import { AuthriteClient } from 'authrite-js';
-import { Ninja } from 'ninja-base';
-import { derivePaymentInfo } from './derivePaymentInfo';
-import { Config } from './types/types';
+import { createAction, CreateActionParams } from '@babbage/sdk-ts'
+import { CONFIG } from './defaults'
+import { AuthriteClient } from 'authrite-js'
+import { Ninja } from 'ninja-base'
+import { derivePaymentInfo } from './derivePaymentInfo'
+import { Config } from './types/types'
 
 // Extend the CreateActionParams type
 interface ExtendedCreateActionParams extends CreateActionParams {
@@ -51,9 +51,9 @@ export async function pay({
     config,
     recipientPublicKey,
     amount
-  });
+  })
 
-  let payment: any;
+  let payment: any
   if (config.clientPrivateKey) {
     // Create a new transaction with Ninja which pays the output
     const ninja = new Ninja({
@@ -61,11 +61,11 @@ export async function pay({
       config: {
         dojoURL: config.dojoURL ?? 'https://default-dojo-url.com'
       }
-    });
+    })
     payment = await ninja.getTransactionWithOutputs({
       outputs: [paymentInfo.output],
       note: 'Payment for file hosting'
-    });
+    })
   } else {
     payment = await createAction({
       outputs: [paymentInfo.output],
@@ -73,17 +73,17 @@ export async function pay({
       labels: ['nanostore'],
       topics: ['UHRP']
       // originator?
-    } as ExtendedCreateActionParams);
+    } as ExtendedCreateActionParams)
 
     if (payment.status === 'error') {
-      const e: Error & { code?: string } = new Error(payment.description);
-      e.code = payment.code;
-      throw e;
+      const e: Error & { code?: string } = new Error(payment.description)
+      e.code = payment.code
+      throw e
     }
   }
 
   // Initialize a new AuthriteClient with SDK or private key signing strategy depending on the config
-  const client = new AuthriteClient(config.nanostoreURL, config.clientPrivateKey ? { clientPrivateKey: config.clientPrivateKey } : undefined);
+  const client = new AuthriteClient(config.nanostoreURL, config.clientPrivateKey ? { clientPrivateKey: config.clientPrivateKey } : undefined)
 
   // Make the pay request
   const pay = await client.createSignedRequest('/pay', {
@@ -97,12 +97,12 @@ export async function pay({
       }]
     },
     orderID
-  });
+  })
 
   if (pay.status === 'error') {
-    const e: Error & { code?: string } = new Error(pay.description);
-    e.code = pay.code;
-    throw e;
+    const e: Error & { code?: string } = new Error(pay.description)
+    e.code = pay.code
+    throw e
   }
-  return pay as PaymentResponse;
+  return pay as PaymentResponse
 }

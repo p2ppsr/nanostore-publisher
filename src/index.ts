@@ -1,9 +1,9 @@
-import { invoice } from './invoice';
-import { derivePaymentInfo } from './derivePaymentInfo';
-import { submitPayment } from './submitPayment';
-import { pay } from './pay';
-import { upload } from './upload';
-import { publishFile } from './publishFile';
+import { invoice } from './invoice'
+import { derivePaymentInfo } from './derivePaymentInfo'
+import { submitPayment } from './submitPayment'
+import { pay } from './pay'
+import { upload } from './upload'
+import { publishFile } from './publishFile'
 
 export {
   invoice,
@@ -12,4 +12,4 @@ export {
   pay,
   upload,
   publishFile
-};
+}

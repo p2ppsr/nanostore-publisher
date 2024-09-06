@@ -1,6 +1,6 @@
-import { AuthriteClient } from 'authrite-js';
-import { CONFIG } from './defaults';
-import { Config } from './types/types';
+import { AuthriteClient } from 'authrite-js'
+import { CONFIG } from './defaults'
+import { Config } from './types/types'
 
 interface Payment {
   inputs: any[];
@@ -53,7 +53,7 @@ export async function submitPayment({
   derivationPrefix,
   derivationSuffix
 }: SubmitPaymentParams = {} as SubmitPaymentParams): Promise<PaymentResult> {
-  const client = new AuthriteClient(config.nanostoreURL, { clientPrivateKey: config.clientPrivateKey });
+  const client = new AuthriteClient(config.nanostoreURL, { clientPrivateKey: config.clientPrivateKey })
   const paymentResult = await client.createSignedRequest('/pay', {
     derivationPrefix,
     transaction: {
@@ -65,11 +65,11 @@ export async function submitPayment({
       }]
     },
     orderID
-  });
+  })
   if (paymentResult.status === 'error') {
-    const e: Error & { code?: string } = new Error(paymentResult.description);
-    e.code = paymentResult.code;
-    throw e;
+    const e: Error & { code?: string } = new Error(paymentResult.description)
+    e.code = paymentResult.code
+    throw e
   }
-  return paymentResult as PaymentResult;
+  return paymentResult as PaymentResult
 }

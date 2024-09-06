@@ -2,7 +2,7 @@ interface Config {
     nanostoreURL: string;
     clientPrivateKey?: string;
     dojoURL?: string;
-} 
+}
 
 interface PaymentInfo {
     derivationPrefix: string;
@@ -21,7 +21,7 @@ export interface File {
     dataAsBuffer?: Buffer;
     arrayBuffer(): Promise<ArrayBuffer>;
 }
-    
+
 export interface UploadResult {
     published: boolean;
     publicURL: string;
