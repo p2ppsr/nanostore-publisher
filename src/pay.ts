@@ -7,23 +7,23 @@ import { Config } from './types/types'
 
 // Extend the CreateActionParams type
 interface ExtendedCreateActionParams extends CreateActionParams {
-  topics?: string[];
+  topics?: string[]
 }
 
 interface PayParams {
-  config?: Config;
-  description: string;
-  orderID: string;
-  recipientPublicKey: string;
-  amount: number;
+  config?: Config
+  description: string
+  orderID: string
+  recipientPublicKey: string
+  amount: number
 }
 
 interface PaymentResponse {
-  uploadURL: string;
-  publicURL: string;
-  status: string;
-  description?: string;
-  code?: string;
+  uploadURL: string
+  publicURL: string
+  status: string
+  description?: string
+  code?: string
 }
 
 /**
@@ -52,8 +52,7 @@ export async function pay({
     recipientPublicKey,
     amount
   })
-
-  let payment: any
+  let payment: unknown
   if (config.clientPrivateKey) {
     // Create a new transaction with Ninja which pays the output
     const ninja = new Ninja({
@@ -72,13 +71,16 @@ export async function pay({
       description,
       labels: ['nanostore'],
       topics: ['UHRP']
-      // originator?
     } as ExtendedCreateActionParams)
-
-    if (payment.status === 'error') {
-      const e: Error & { code?: string } = new Error(payment.description)
-      e.code = payment.code
-      throw e
+    if (typeof payment === 'object' && payment !== null && 'status' in payment) {
+      if (payment.status === 'error') {
+        const errorPayment = payment as { status: string; description?: string; code?: string }
+        const e: Error & { code?: string } = new Error(errorPayment.description || 'Unknown error')
+        if (errorPayment.code) {
+          e.code = errorPayment.code
+        }
+        throw e
+      }
     }
   }
 
@@ -88,14 +90,16 @@ export async function pay({
   // Make the pay request
   const pay = await client.createSignedRequest('/pay', {
     derivationPrefix: paymentInfo.derivationPrefix,
-    transaction: {
-      ...payment,
-      outputs: [{
-        vout: 0,
-        satoshis: amount,
-        derivationSuffix: paymentInfo.derivationSuffix
-      }]
-    },
+    transaction: payment
+      ? {
+          ...payment,
+          outputs: [{
+            vout: 0,
+            satoshis: amount,
+            derivationSuffix: paymentInfo.derivationSuffix
+          }]
+        }
+      : undefined,
     orderID
   })
 

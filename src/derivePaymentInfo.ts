@@ -7,9 +7,9 @@ import crypto from 'crypto'
 import { Config, PaymentInfo } from './types/types'
 
 interface DerivePaymentInfoParams {
-  config?: Config;
-  recipientPublicKey: string;
-  amount: number;
+  config?: Config
+  recipientPublicKey: string
+  amount: number
 }
 
 /**

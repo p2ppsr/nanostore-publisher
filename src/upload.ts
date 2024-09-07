@@ -7,15 +7,15 @@ import { Buffer } from 'buffer'
 import fs from 'fs'
 
 // Add this line:
-type File = CustomFile | globalThis.File;
+type File = CustomFile | globalThis.File
 
 export interface UploadParams {
-  config?: Config;
-  uploadURL: string;
-  publicURL: string;
-  file: File;
-  serverURL?: string;
-  onUploadProgress?: (progressEvent: any) => void;
+  config?: Config
+  uploadURL: string
+  publicURL: string
+  file: File
+  serverURL?: string
+  onUploadProgress?: (progressEvent: any) => void
 }
 
 let FileReader: typeof globalThis.FileReader

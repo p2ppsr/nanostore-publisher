@@ -5,22 +5,22 @@ import { upload } from './upload'
 import { Config } from './types/types'
 
 interface File {
-  size: number;
-  type: string;
-  arrayBuffer(): Promise<ArrayBuffer>;
+  size: number
+  type: string
+  arrayBuffer(): Promise<ArrayBuffer>
 }
 
 interface PublishFileParams {
-  config?: Config;
-  file: File;
-  retentionPeriod: number;
-  progressTracker?: (progress: number) => void;
+  config?: Config
+  file: File
+  retentionPeriod: number
+  progressTracker?: (progress: number) => void
 }
 
 interface UploadResult {
-  hash: string;
-  publicURL: string;
-  status: string;
+  hash: string
+  publicURL: string
+  status: string
 }
 
 /**
