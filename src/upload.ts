@@ -4,9 +4,9 @@ import { CONFIG } from './defaults'
 import FormData from 'form-data'
 import { Config, UploadResult, File as CustomFile } from './types/types'
 import { Buffer } from 'buffer'
-import fs from 'fs'
+// Remove unused import
+// import fs from 'fs'
 
-// Add this line:
 type File = CustomFile | globalThis.File
 
 export interface UploadParams {
@@ -15,7 +15,7 @@ export interface UploadParams {
   publicURL: string
   file: File
   serverURL?: string
-  onUploadProgress?: (progressEvent: any) => void
+  onUploadProgress?: (progressEvent: number) => void
 }
 
 let FileReader: typeof globalThis.FileReader
@@ -27,7 +27,7 @@ if (typeof window !== 'undefined' && window.FileReader) {
     static readAsArrayBuffer(file: Buffer): Promise<ArrayBuffer> {
       return Promise.resolve(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength))
     }
-  } as any
+  } as unknown as typeof globalThis.FileReader
 }
 
 /**
@@ -54,7 +54,7 @@ export async function upload({
   // Allow uploads with MiniScribe
   if (serverURL.startsWith('http://localhost')) {
     const formData = new FormData()
-    formData.append('file', file as any)
+    formData.append('file', file as Blob | Buffer)
     const res = await axios.post(`${serverURL}/pay`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
@@ -99,6 +99,8 @@ export async function upload({
   }
 }
 
+// Remove or comment out the unused functions
+/*
 function readFile(file: File): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -122,3 +124,4 @@ async function uploadFile(file: File) {
     console.error('Error reading file:', error)
   }
 }
+*/
