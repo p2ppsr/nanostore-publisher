@@ -6,6 +6,12 @@ import { Buffer } from 'buffer';
 jest.mock('axios');
 jest.mock('uhrp-url');
 
+// Mock FormData
+class MockFormData {
+  append = jest.fn();
+}
+global.FormData = MockFormData as any;
+
 describe('upload function', () => {
   const originalNodeEnv = process.env.NODE_ENV;
 
@@ -46,9 +52,7 @@ describe('upload function', () => {
   });
 
   it('should upload file to local storage', async () => {
-    const mockFileContent = Buffer.from('test content');
-    const mockFile = new Blob([mockFileContent], { type: 'application/octet-stream' });
-    Object.defineProperty(mockFile, 'name', { value: 'test.bin' });
+    const mockFile = Buffer.from('test content');
 
     const result = await upload({
       uploadURL: 'http://localhost:3000/upload',
@@ -59,7 +63,7 @@ describe('upload function', () => {
 
     expect(axios.post).toHaveBeenCalledWith(
       'http://localhost:3000/pay',
-      expect.any(FormData),
+      expect.any(MockFormData),
       expect.objectContaining({
         headers: { 'Content-Type': 'multipart/form-data' }
       })
