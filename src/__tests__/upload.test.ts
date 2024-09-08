@@ -37,7 +37,7 @@ describe('upload function', () => {
     const result = await upload({
       uploadURL: 'http://localhost:3000/upload',
       publicURL: 'http://localhost:3000/public',
-      file: { dataAsBuffer: mockFile },
+      file: { dataAsBuffer: mockFile, type: 'application/octet-stream' },
       serverURL: 'http://localhost:3000'
     });
     expect(result).toEqual({
