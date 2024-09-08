@@ -6,6 +6,8 @@ import { Buffer } from 'buffer';
 jest.mock('axios');
 jest.mock('uhrp-url');
 
+global.FormData = require('form-data');
+
 describe('upload function', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -13,6 +15,8 @@ describe('upload function', () => {
 
   it('Calls axios.put with the provided fields', async () => {
     const mockFile = new Blob(['test content'], { type: 'text/plain' });
+    (axios.put as jest.Mock).mockResolvedValue({});
+    (getURLForFile as jest.Mock).mockResolvedValue('mock-hash');
     await upload({
       uploadURL: 'https://example.com/upload',
       publicURL: 'https://example.com/public',
@@ -28,12 +32,12 @@ describe('upload function', () => {
   });
 
   it('Handles local server upload correctly', async () => {
-    const mockFile = new Blob(['test content'], { type: 'text/plain' });
+    const mockFile = Buffer.from('test content');
     (axios.post as jest.Mock).mockResolvedValue({ data: 'mock-hash' });
     const result = await upload({
       uploadURL: 'http://localhost:3000/upload',
       publicURL: 'http://localhost:3000/public',
-      file: mockFile,
+      file: { dataAsBuffer: mockFile },
       serverURL: 'http://localhost:3000'
     });
     expect(result).toEqual({
@@ -47,18 +51,28 @@ describe('upload function', () => {
   it('Calls onUploadProgress during upload', async () => {
     const mockProgressTracker = jest.fn();
     const mockFile = new Blob(['test content'], { type: 'text/plain' });
+    (axios.put as jest.Mock).mockResolvedValue({});
+    (getURLForFile as jest.Mock).mockResolvedValue('mock-hash');
     await upload({
       uploadURL: 'https://example.com/upload',
       publicURL: 'https://example.com/public',
       file: mockFile,
       onUploadProgress: mockProgressTracker
     });
-    expect(mockProgressTracker).toHaveBeenCalled();
+    expect(axios.put).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Blob),
+      expect.objectContaining({
+        onUploadProgress: mockProgressTracker
+      })
+    );
   });
 
   it('Handles different file types correctly', async () => {
     const textFile = new Blob(['text content'], { type: 'text/plain' });
     const imageFile = new Blob(['image content'], { type: 'image/png' });
+    (axios.put as jest.Mock).mockResolvedValue({});
+    (getURLForFile as jest.Mock).mockResolvedValue('mock-hash');
     
     await upload({ file: textFile, uploadURL: 'https://example.com/upload', publicURL: 'https://example.com/public' });
     expect(axios.put).toHaveBeenCalledWith(
