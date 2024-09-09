@@ -86,6 +86,9 @@ export async function publishFile({
     // Add status to the upload result
     return { ...uploadResult, status: 'success' }
   } catch (e) {
+    if (e instanceof Error && ('code' in e) && (e.code === 'ERR_UI_FILE_MISSING' || e.code === 'ERR_UI_HOST_DURATION_MISSING')) {
+      throw e;
+    }
     console.error(e)
     return undefined
   }

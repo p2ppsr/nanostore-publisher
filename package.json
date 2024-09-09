@@ -6,11 +6,22 @@
   "types": "src/types/types.d.ts",
   "scripts": {
     "build": "webpack --config webpack.prod.js",
-    "test": "jest --config jest.config.js",
+    "test": "jest",
     "test:watch": "jest --watch",
     "doc": "documentation readme src/index.ts --section=API",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "test:integration": "jest --config jest.integration.config.js",
+    "coverage": "jest --coverage",
+    "test:performance": "node performance-tests.js",
+    "docs:validate": "documentation lint src/**/*.js",
+    "test:e2e": "cypress run",
+    "test:compatibility": "node compatibility-tests.js",
+    "config:validate": "node validate-config.js",
+    "test:custom": "node custom-tests.js",
+    "test:all": "npm run lint && npm run type-check && npm run test && npm run test:integration && npm run coverage && npm audit && npm run test:performance && npm run docs:validate && npm run test:e2e && npm run test:compatibility && npm run config:validate && npm run test:custom",
+    "format": "prettier --write \"src/**/*.ts\""
   },
   "repository": {
     "type": "git",

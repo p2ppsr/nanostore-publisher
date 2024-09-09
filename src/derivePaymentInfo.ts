@@ -1,4 +1,4 @@
-import bsv from 'babbage-bsv'
+import * as bsv from 'babbage-bsv';
 import { getPublicKey } from '@babbage/sdk-ts'
 import { CONFIG } from './defaults'
 import { getPaymentAddress } from 'sendover'
@@ -28,6 +28,13 @@ export async function derivePaymentInfo({
   recipientPublicKey,
   amount
 }: DerivePaymentInfoParams = {} as DerivePaymentInfoParams): Promise<PaymentInfo> {
+  if (!recipientPublicKey || typeof recipientPublicKey !== 'string') {
+    throw new Error('Invalid recipient public key');
+  }
+  if (typeof amount !== 'number' || amount <= 0) {
+    throw new Error('Invalid amount');
+  }
+
   // Create a derivation prefix and suffix to derive the public key
   const derivationPrefix = crypto.randomBytes(10).toString('base64')
   const derivationSuffix = crypto.randomBytes(10).toString('base64')
@@ -54,7 +61,7 @@ export async function derivePaymentInfo({
     bsv.Script.fromAddress(bsv.Address.fromPublicKey(
       bsv.PublicKey.fromString(derivedPublicKey)
     ))
-  ).toHex()
+  ).toHex();
 
   // Return the new output
   const paymentInfo: PaymentInfo = {

@@ -46,6 +46,17 @@ export async function pay({
   recipientPublicKey,
   amount
 }: PayParams = {} as PayParams): Promise<PaymentResponse> {
+  // Input validation
+  if (typeof amount !== 'number' || amount <= 0) {
+    throw new Error('Invalid amount');
+  }
+  if (typeof orderID !== 'string' || orderID.trim() === '') {
+    throw new Error('Invalid order ID');
+  }
+  if (typeof recipientPublicKey !== 'string' || recipientPublicKey.trim() === '') {
+    throw new Error('Invalid recipient public key');
+  }
+
   // Derive payment information
   const paymentInfo = await derivePaymentInfo({
     config,

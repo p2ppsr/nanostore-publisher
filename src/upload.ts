@@ -1,11 +1,8 @@
 import axios from 'axios'
 import { getURLForFile } from 'uhrp-url'
 import { CONFIG } from './defaults'
-import FormData from 'form-data'
 import { Config, UploadResult, File as CustomFile } from './types/types'
 import { Buffer } from 'buffer'
-// Remove unused import
-// import fs from 'fs'
 
 type File = CustomFile | globalThis.File
 
@@ -30,18 +27,19 @@ if (typeof window !== 'undefined' && window.FileReader) {
   } as unknown as typeof globalThis.FileReader
 }
 
-/**
- * Uploads a file to NanoStore and pays an invoice, thereby starting the file hosting contract.
- *
- * @param obj All parameters are given in an object.
- * @param obj.uploadURL The external URL where the file is uploaded to host it.
- * @param obj.publicURL The public URL where the file can be downloaded from.
- * @param obj.file The file to upload. This is usually obtained by querying for your HTML form's file upload `<input />` tag and referencing `tagElement.files[0]`. Or using custom object as defined in publishFile.js
- * @param obj.serverURL The URL of the NanoStore server to contract with. By default, the Babbage NanoStore server is used.
- * @param obj.onUploadProgress A function called with periodic progress updates as the file uploads
- *
- * @returns The publication object. Fields are `published=true`, `hash` (the UHRP URL of the new file), and `publicURL`, the HTTP URL where the file is published.
- */
+// Simple FormData-like class
+class SimpleFormData {
+  private data: Record<string, any> = {}
+
+  append(key: string, value: any, options?: any) {
+    this.data[key] = value
+  }
+
+  get(key: string) {
+    return this.data[key]
+  }
+}
+
 export async function upload({
   config = CONFIG,
   uploadURL,
@@ -50,11 +48,20 @@ export async function upload({
   serverURL = `${config.nanostoreURL}`,
   onUploadProgress = () => { }
 }: UploadParams): Promise<UploadResult> {
-  // Upload file to either local storage or external storage depending on serverURL
-  // Allow uploads with MiniScribe
   if (serverURL.startsWith('http://localhost')) {
-    const formData = new FormData()
-    formData.append('file', file as Blob | Buffer)
+    const formData = new SimpleFormData()
+    if (file instanceof Blob) {
+      formData.append('file', file)
+    } else if (file instanceof Buffer) {
+      formData.append('file', file, { filename: 'file' })
+    } else if ('dataAsBuffer' in file) {
+      formData.append('file', file.dataAsBuffer, { filename: 'file' })
+    } else if (file instanceof File) {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      formData.append('file', buffer, { filename: file.name })
+    } else {
+      throw new Error('Unsupported file type for local storage upload')
+    }
     const res = await axios.post(`${serverURL}/pay`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
@@ -95,33 +102,6 @@ export async function upload({
     published: true,
     publicURL,
     hash: concurrentResult[1],
-    status: 'success' // Add this line
+    status: 'success'
   }
 }
-
-// Remove or comment out the unused functions
-/*
-function readFile(file: File): Promise<ArrayBuffer> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      if (event.target && event.target.result) {
-        resolve(event.target.result as ArrayBuffer)
-      } else {
-        reject(new Error('Failed to read file'))
-      }
-    }
-    reader.onerror = (error) => reject(error)
-    reader.readAsArrayBuffer(file as Blob)
-  })
-}
-
-async function uploadFile(file: File) {
-  try {
-    const content = await readFile(file)
-    // Process the file content...
-  } catch (error) {
-    console.error('Error reading file:', error)
-  }
-}
-*/

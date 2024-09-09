@@ -68,6 +68,26 @@ export async function submitPayment({
   derivationPrefix,
   derivationSuffix
 }: SubmitPaymentParams = {} as SubmitPaymentParams): Promise<PaymentResult> {
+  // Input validation
+  if (typeof amount !== 'number' || amount <= 0 || !Number.isInteger(amount)) {
+    throw new Error('Invalid amount');
+  }
+  if (typeof orderID !== 'string' || orderID.trim() === '') {
+    throw new Error('Invalid order ID');
+  }
+  if (typeof vout !== 'number' || vout < 0) {
+    throw new Error('Invalid vout');
+  }
+  if (!payment || typeof payment !== 'object') {
+    throw new Error('Invalid payment object');
+  }
+  if (typeof derivationPrefix !== 'string' || derivationPrefix.trim() === '') {
+    throw new Error('Invalid derivation prefix');
+  }
+  if (typeof derivationSuffix !== 'string' || derivationSuffix.trim() === '') {
+    throw new Error('Invalid derivation suffix');
+  }
+
   const client = new AuthriteClient(config.nanostoreURL, { clientPrivateKey: config.clientPrivateKey })
   const paymentResult = await client.createSignedRequest('/pay', {
     derivationPrefix,

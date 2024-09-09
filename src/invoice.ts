@@ -30,6 +30,14 @@ interface InvoiceResponse {
  * @returns The invoice object, containing `message` giving details, `identityKey` recipient's private key, `amount` (satoshis), `ORDER_ID`, for referencing this contract payment and passed to the `upload` function. The object also contains `publicURL`, which is the HTTP URL where the file will become available for the duration of the contract once uploaded and the `status`.
  */
 export async function invoice({ config = CONFIG, fileSize, retentionPeriod }: InvoiceParams = {} as InvoiceParams): Promise<InvoiceResponse> {
+  // Input validation
+  if (typeof fileSize !== 'number' || fileSize <= 0) {
+    throw new Error('Invalid file size');
+  }
+  if (typeof retentionPeriod !== 'number' || retentionPeriod <= 0) {
+    throw new Error('Invalid retention period');
+  }
+
   // Initialize a new Authrite client depending on the config
   const client = new AuthriteClient(config.nanostoreURL, config.clientPrivateKey ? { clientPrivateKey: config.clientPrivateKey } : undefined)
 
