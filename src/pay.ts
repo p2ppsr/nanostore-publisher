@@ -7,23 +7,23 @@ import { Config } from './types/types'
 
 // Extend the CreateActionParams type
 interface ExtendedCreateActionParams extends CreateActionParams {
-  topics?: string[]
+  topics?: string[];
 }
 
 interface PayParams {
-  config?: Config
-  description: string
-  orderID: string
-  recipientPublicKey: string
-  amount: number
+  config?: Config;
+  description: string;
+  orderID: string;
+  recipientPublicKey: string;
+  amount: number;
 }
 
 interface PaymentResponse {
-  uploadURL: string
-  publicURL: string
-  status: string
-  description?: string
-  code?: string
+  uploadURL: string;
+  publicURL: string;
+  status: string;
+  description?: string;
+  code?: string;
 }
 
 /**
@@ -39,22 +39,27 @@ interface PaymentResponse {
  *
  * @returns The pay object, contains the `uploadURL` and the `publicURL` and the `status`'.
  */
-export async function pay({
-  config = CONFIG,
-  description,
-  orderID,
-  recipientPublicKey,
-  amount
-}: PayParams = {} as PayParams): Promise<PaymentResponse> {
+export async function pay(
+  {
+    config = CONFIG,
+    description,
+    orderID,
+    recipientPublicKey,
+    amount
+  }: PayParams = {} as PayParams
+): Promise<PaymentResponse> {
   // Input validation
   if (typeof amount !== 'number' || amount <= 0) {
-    throw new Error('Invalid amount');
+    throw new Error('Invalid amount')
   }
   if (typeof orderID !== 'string' || orderID.trim() === '') {
-    throw new Error('Invalid order ID');
+    throw new Error('Invalid order ID')
   }
-  if (typeof recipientPublicKey !== 'string' || recipientPublicKey.trim() === '') {
-    throw new Error('Invalid recipient public key');
+  if (
+    typeof recipientPublicKey !== 'string' ||
+    recipientPublicKey.trim() === ''
+  ) {
+    throw new Error('Invalid recipient public key')
   }
 
   // Derive payment information
@@ -83,10 +88,20 @@ export async function pay({
       labels: ['nanostore'],
       topics: ['UHRP']
     } as ExtendedCreateActionParams)
-    if (typeof payment === 'object' && payment !== null && 'status' in payment) {
+    if (
+      typeof payment === 'object' &&
+      payment !== null &&
+      'status' in payment
+    ) {
       if (payment.status === 'error') {
-        const errorPayment = payment as { status: string; description?: string; code?: string }
-        const e: Error & { code?: string } = new Error(errorPayment.description || 'Unknown error')
+        const errorPayment = payment as {
+          status: string;
+          description?: string;
+          code?: string;
+        }
+        const e: Error & { code?: string } = new Error(
+          errorPayment.description || 'Unknown error'
+        )
         if (errorPayment.code) {
           e.code = errorPayment.code
         }
@@ -96,7 +111,12 @@ export async function pay({
   }
 
   // Initialize a new AuthriteClient with SDK or private key signing strategy depending on the config
-  const client = new AuthriteClient(config.nanostoreURL, config.clientPrivateKey ? { clientPrivateKey: config.clientPrivateKey } : undefined)
+  const client = new AuthriteClient(
+    config.nanostoreURL,
+    config.clientPrivateKey
+      ? { clientPrivateKey: config.clientPrivateKey }
+      : undefined
+  )
 
   // Make the pay request
   const pay = await client.createSignedRequest('/pay', {
@@ -104,11 +124,13 @@ export async function pay({
     transaction: payment
       ? {
           ...payment,
-          outputs: [{
-            vout: 0,
-            satoshis: amount,
-            derivationSuffix: paymentInfo.derivationSuffix
-          }]
+          outputs: [
+            {
+              vout: 0,
+              satoshis: amount,
+              derivationSuffix: paymentInfo.derivationSuffix
+            }
+          ]
         }
       : undefined,
     orderID

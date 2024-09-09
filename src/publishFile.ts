@@ -5,22 +5,22 @@ import { upload } from './upload'
 import { Config } from './types/types'
 
 interface File {
-  size: number
-  type: string
-  arrayBuffer(): Promise<ArrayBuffer>
+  size: number;
+  type: string;
+  arrayBuffer(): Promise<ArrayBuffer>;
 }
 
 interface PublishFileParams {
-  config?: Config
-  file: File
-  retentionPeriod: number
-  progressTracker?: (progress: number) => void
+  config?: Config;
+  file: File;
+  retentionPeriod: number;
+  progressTracker?: (progress: number) => void;
 }
 
 interface UploadResult {
-  hash: string
-  publicURL: string
-  status: string
+  hash: string;
+  publicURL: string;
+  status: string;
 }
 
 /**
@@ -36,21 +36,27 @@ interface UploadResult {
  *
  * @returns The upload object, contains the `hash` and the `publicURL` and the `status`'.
  */
-export async function publishFile({
-  config = CONFIG,
-  file,
-  retentionPeriod,
-  progressTracker = () => {}
-}: PublishFileParams = {} as PublishFileParams): Promise<UploadResult | undefined> {
+export async function publishFile(
+  {
+    config = CONFIG,
+    file,
+    retentionPeriod,
+    progressTracker = () => {}
+  }: PublishFileParams = {} as PublishFileParams
+): Promise<UploadResult | undefined> {
   try {
     // Validate required params
     if (!file) {
-      const e: Error & { code?: string } = new Error('Choose a file to upload!')
+      const e: Error & { code?: string } = new Error(
+        'Choose a file to upload!'
+      )
       e.code = 'ERR_UI_FILE_MISSING'
       throw e
     }
     if (!retentionPeriod) {
-      const e: Error & { code?: string } = new Error('Specify how long to host the file!')
+      const e: Error & { code?: string } = new Error(
+        'Specify how long to host the file!'
+      )
       e.code = 'ERR_UI_HOST_DURATION_MISSING'
       throw e
     }
@@ -86,8 +92,13 @@ export async function publishFile({
     // Add status to the upload result
     return { ...uploadResult, status: 'success' }
   } catch (e) {
-    if (e instanceof Error && ('code' in e) && (e.code === 'ERR_UI_FILE_MISSING' || e.code === 'ERR_UI_HOST_DURATION_MISSING')) {
-      throw e;
+    if (
+      e instanceof Error &&
+      'code' in e &&
+      (e.code === 'ERR_UI_FILE_MISSING' ||
+        e.code === 'ERR_UI_HOST_DURATION_MISSING')
+    ) {
+      throw e
     }
     console.error(e)
     return undefined

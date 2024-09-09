@@ -1,4 +1,4 @@
-import * as bsv from 'babbage-bsv';
+import * as bsv from 'babbage-bsv'
 import { getPublicKey } from '@babbage/sdk-ts'
 import { CONFIG } from './defaults'
 import { getPaymentAddress } from 'sendover'
@@ -7,9 +7,9 @@ import crypto from 'crypto'
 import { Config, PaymentInfo } from './types/types'
 
 interface DerivePaymentInfoParams {
-  config?: Config
-  recipientPublicKey: string
-  amount: number
+  config?: Config;
+  recipientPublicKey: string;
+  amount: number;
 }
 
 /**
@@ -23,16 +23,18 @@ interface DerivePaymentInfoParams {
  *
  * @returns The output object, contains the `script` and the amount of `satoshis`'.
  */
-export async function derivePaymentInfo({
-  config = CONFIG,
-  recipientPublicKey,
-  amount
-}: DerivePaymentInfoParams = {} as DerivePaymentInfoParams): Promise<PaymentInfo> {
+export async function derivePaymentInfo(
+  {
+    config = CONFIG,
+    recipientPublicKey,
+    amount
+  }: DerivePaymentInfoParams = {} as DerivePaymentInfoParams
+): Promise<PaymentInfo> {
   if (!recipientPublicKey || typeof recipientPublicKey !== 'string') {
-    throw new Error('Invalid recipient public key');
+    throw new Error('Invalid recipient public key')
   }
   if (typeof amount !== 'number' || amount <= 0) {
-    throw new Error('Invalid amount');
+    throw new Error('Invalid amount')
   }
 
   // Create a derivation prefix and suffix to derive the public key
@@ -58,10 +60,10 @@ export async function derivePaymentInfo({
 
   // Create an output script that can only be unlocked with the corresponding derived private key
   const script = new bsv.Script(
-    bsv.Script.fromAddress(bsv.Address.fromPublicKey(
-      bsv.PublicKey.fromString(derivedPublicKey)
-    ))
-  ).toHex();
+    bsv.Script.fromAddress(
+      bsv.Address.fromPublicKey(bsv.PublicKey.fromString(derivedPublicKey))
+    )
+  ).toHex()
 
   // Return the new output
   const paymentInfo: PaymentInfo = {

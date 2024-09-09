@@ -4,41 +4,41 @@ import { Config } from './types/types'
 
 interface Input {
   // Define the structure of an input
-  txid: string
-  vout: number
-  satoshis: number
-  scriptSig: string
+  txid: string;
+  vout: number;
+  satoshis: number;
+  scriptSig: string;
 }
 
 interface MapiResponse {
   // Define the structure of a mapi response
-  payload: string
-  signature: string
-  publicKey: string
+  payload: string;
+  signature: string;
+  publicKey: string;
 }
 
 interface Payment {
-  inputs: Input[]
-  mapiResponses: MapiResponse[]
-  rawTx: string
+  inputs: Input[];
+  mapiResponses: MapiResponse[];
+  rawTx: string;
 }
 
 interface SubmitPaymentParams {
-  config?: Config
-  orderID: string
-  amount: number
-  payment: Payment
-  vout: number
-  derivationPrefix: string
-  derivationSuffix: string
+  config?: Config;
+  orderID: string;
+  amount: number;
+  payment: Payment;
+  vout: number;
+  derivationPrefix: string;
+  derivationSuffix: string;
 }
 
 interface PaymentResult {
-  uploadURL: string
-  publicURL: string
-  status: string
-  description?: string
-  code?: string
+  uploadURL: string;
+  publicURL: string;
+  status: string;
+  description?: string;
+  code?: string;
 }
 
 /**
@@ -59,45 +59,51 @@ interface PaymentResult {
  *
  * @returns The paymentResult object, contains the `uploadURL` and the `publicURL` and the `status`'.
  */
-export async function submitPayment({
-  config = CONFIG,
-  orderID,
-  amount,
-  payment,
-  vout,
-  derivationPrefix,
-  derivationSuffix
-}: SubmitPaymentParams = {} as SubmitPaymentParams): Promise<PaymentResult> {
+export async function submitPayment(
+  {
+    config = CONFIG,
+    orderID,
+    amount,
+    payment,
+    vout,
+    derivationPrefix,
+    derivationSuffix
+  }: SubmitPaymentParams = {} as SubmitPaymentParams
+): Promise<PaymentResult> {
   // Input validation
   if (typeof amount !== 'number' || amount <= 0 || !Number.isInteger(amount)) {
-    throw new Error('Invalid amount');
+    throw new Error('Invalid amount')
   }
   if (typeof orderID !== 'string' || orderID.trim() === '') {
-    throw new Error('Invalid order ID');
+    throw new Error('Invalid order ID')
   }
   if (typeof vout !== 'number' || vout < 0) {
-    throw new Error('Invalid vout');
+    throw new Error('Invalid vout')
   }
   if (!payment || typeof payment !== 'object') {
-    throw new Error('Invalid payment object');
+    throw new Error('Invalid payment object')
   }
   if (typeof derivationPrefix !== 'string' || derivationPrefix.trim() === '') {
-    throw new Error('Invalid derivation prefix');
+    throw new Error('Invalid derivation prefix')
   }
   if (typeof derivationSuffix !== 'string' || derivationSuffix.trim() === '') {
-    throw new Error('Invalid derivation suffix');
+    throw new Error('Invalid derivation suffix')
   }
 
-  const client = new AuthriteClient(config.nanostoreURL, { clientPrivateKey: config.clientPrivateKey })
+  const client = new AuthriteClient(config.nanostoreURL, {
+    clientPrivateKey: config.clientPrivateKey
+  })
   const paymentResult = await client.createSignedRequest('/pay', {
     derivationPrefix,
     transaction: {
       ...payment,
-      outputs: [{
-        vout,
-        satoshis: amount,
-        derivationSuffix
-      }]
+      outputs: [
+        {
+          vout,
+          satoshis: amount,
+          derivationSuffix
+        }
+      ]
     },
     orderID
   })

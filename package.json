@@ -44,6 +44,7 @@
     "babbage-bsv": "^0.2.5",
     "form-data": "^4.0.0",
     "ninja-base": "^0.3.44",
+    "prettier": "^3.3.3",
     "uhrp-url": "^0.1.10"
   },
   "devDependencies": {

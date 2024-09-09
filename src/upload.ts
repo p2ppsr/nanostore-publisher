@@ -4,15 +4,15 @@ import { CONFIG } from './defaults'
 import { Config, UploadResult, File as CustomFile } from './types/types'
 import { Buffer } from 'buffer'
 
-type File = CustomFile | globalThis.File
+type File = CustomFile | globalThis.File;
 
 export interface UploadParams {
-  config?: Config
-  uploadURL: string
-  publicURL: string
-  file: File
-  serverURL?: string
-  onUploadProgress?: (progressEvent: number) => void
+  config?: Config;
+  uploadURL: string;
+  publicURL: string;
+  file: File;
+  serverURL?: string;
+  onUploadProgress?: (progressEvent: number) => void;
 }
 
 let FileReader: typeof globalThis.FileReader
@@ -22,7 +22,9 @@ if (typeof window !== 'undefined' && window.FileReader) {
   // Custom FileReader-like implementation for Node.js
   FileReader = class {
     static readAsArrayBuffer(file: Buffer): Promise<ArrayBuffer> {
-      return Promise.resolve(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength))
+      return Promise.resolve(
+        file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength)
+      )
     }
   } as unknown as typeof globalThis.FileReader
 }
@@ -46,7 +48,7 @@ export async function upload({
   publicURL,
   file,
   serverURL = `${config.nanostoreURL}`,
-  onUploadProgress = () => { }
+  onUploadProgress = () => {}
 }: UploadParams): Promise<UploadResult> {
   if (serverURL.startsWith('http://localhost')) {
     const formData = new SimpleFormData()
@@ -76,11 +78,12 @@ export async function upload({
 
   // This uploads the file and hashes the file at the same time
   const concurrentResult = await Promise.all([
-    axios.put(
-      uploadURL,
-      'dataAsBuffer' in file ? file.dataAsBuffer : file,
-      { headers: { 'Content-Type': 'type' in file ? file.type : 'application/octet-stream' }, onUploadProgress }
-    ),
+    axios.put(uploadURL, 'dataAsBuffer' in file ? file.dataAsBuffer : file, {
+      headers: {
+        'Content-Type': 'type' in file ? file.type : 'application/octet-stream'
+      },
+      onUploadProgress
+    }),
     new Promise<string>((resolve, reject) => {
       try {
         // Support both Browser and Node env
