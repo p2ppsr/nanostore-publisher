@@ -1,0 +1,14 @@
+{
+	"eslint.validate": [
+		"javascript",
+		"javascriptreact",
+		"typescript",
+		"typescriptreact"
+	],
+	"eslint.options": {
+		"ignorePath": ".eslintignore"
+	},
+	"files.exclude": {
+		"**/dist": true
+	}
+}
