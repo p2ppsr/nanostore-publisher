@@ -1,8 +1,8 @@
-import { publishFile } from '../publishFile'
-import { invoice } from '../invoice'
-import { pay } from '../pay'
-import { upload } from '../upload'
-import { CONFIG } from '../defaults'
+import { publishFile } from '../components/publishFile'
+import { invoice } from '../components/invoice'
+import { pay } from '../components/pay'
+import { upload } from '../components/upload'
+import { CONFIG } from '../components/defaults'
 
 const originalConsoleError = console.error
 
@@ -49,10 +49,10 @@ describe('publishFile function', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (invoice as jest.Mock).mockResolvedValue(mockInvoiceResult);
-    (pay as jest.Mock).mockResolvedValue(mockPayResult);
-    (upload as jest.Mock).mockResolvedValue(mockUploadResult)
+    jest.clearAllMocks()
+    ;(invoice as jest.Mock).mockResolvedValue(mockInvoiceResult)
+    ;(pay as jest.Mock).mockResolvedValue(mockPayResult)
+    ;(upload as jest.Mock).mockResolvedValue(mockUploadResult)
   })
 
   it('should publish a file successfully', async () => {

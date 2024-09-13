@@ -1,7 +1,7 @@
-import { derivePaymentInfo } from '../derivePaymentInfo'
+import { derivePaymentInfo } from '../components/derivePaymentInfo'
 import { getPublicKey } from '@babbage/sdk-ts'
 import { invoice3241645161d8 } from 'ninja-base'
-import { CONFIG } from '../defaults'
+import { CONFIG } from '../components/defaults'
 import crypto from 'crypto'
 
 // Import the mocked modules after mocking
@@ -41,7 +41,7 @@ jest.mock('babbage-bsv', () => {
     },
     BN: jest
       .fn()
-      .mockImplementation((value) => ({ toString: () => value.toString() }))
+      .mockImplementation(value => ({ toString: () => value.toString() }))
   }
 })
 
@@ -57,13 +57,13 @@ describe('derivePaymentInfo function', () => {
     '0250863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b2352'
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (crypto.randomBytes as jest.Mock).mockReturnValue(
+    jest.clearAllMocks()
+    ;(crypto.randomBytes as jest.Mock).mockReturnValue(
       Buffer.from('mockRandomBytes')
-    );
-    (invoice3241645161d8 as jest.Mock).mockReturnValue('mockInvoiceNumber');
-    (getPaymentAddress as jest.Mock).mockReturnValue(mockValidPublicKey);
-    (getPublicKey as jest.Mock).mockResolvedValue(mockValidPublicKey)
+    )
+    ;(invoice3241645161d8 as jest.Mock).mockReturnValue('mockInvoiceNumber')
+    ;(getPaymentAddress as jest.Mock).mockReturnValue(mockValidPublicKey)
+    ;(getPublicKey as jest.Mock).mockResolvedValue(mockValidPublicKey)
   })
 
   it('should derive payment info with clientPrivateKey', async () => {
@@ -158,9 +158,9 @@ describe('derivePaymentInfo function', () => {
     const result1 = await derivePaymentInfo({
       recipientPublicKey: mockRecipientPublicKey,
       amount: mockAmount
-    });
+    })
 
-    (crypto.randomBytes as jest.Mock).mockReturnValue(
+    ;(crypto.randomBytes as jest.Mock).mockReturnValue(
       Buffer.from('differentRandomBytes')
     )
 

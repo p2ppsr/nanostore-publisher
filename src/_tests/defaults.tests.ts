@@ -1,4 +1,4 @@
-import { CONFIG } from '../defaults'
+import { CONFIG } from '../components/defaults'
 import { Config } from '../types/types'
 
 describe('defaults', () => {
@@ -9,7 +9,7 @@ describe('defaults', () => {
 
   it('should have the correct shape', () => {
     const expectedKeys: (keyof Config)[] = ['nanostoreURL']
-    expectedKeys.forEach((key) => {
+    expectedKeys.forEach(key => {
       expect(CONFIG).toHaveProperty(key)
     })
   })

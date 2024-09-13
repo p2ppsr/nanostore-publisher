@@ -1,9 +1,9 @@
-import { pay } from '../pay'
-import { derivePaymentInfo } from '../derivePaymentInfo'
+import { pay } from '../components/pay'
+import { derivePaymentInfo } from '../components/derivePaymentInfo'
 import { createAction } from '@babbage/sdk-ts'
 import { AuthriteClient } from 'authrite-js'
 import { Ninja } from 'ninja-base'
-import { CONFIG } from '../defaults'
+import { CONFIG } from '../components/defaults'
 
 jest.mock('../derivePaymentInfo')
 jest.mock('@babbage/sdk-ts')
@@ -32,13 +32,13 @@ describe('pay function', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (derivePaymentInfo as jest.Mock).mockResolvedValue(mockPaymentInfo)
+    jest.clearAllMocks()
+    ;(derivePaymentInfo as jest.Mock).mockResolvedValue(mockPaymentInfo)
   })
 
   it('should create a payment using Ninja when clientPrivateKey is provided', async () => {
-    const mockNinjaTransaction = { txid: 'mockTxid' };
-    (Ninja as jest.Mock).mockImplementation(() => ({
+    const mockNinjaTransaction = { txid: 'mockTxid' }
+    ;(Ninja as jest.Mock).mockImplementation(() => ({
       getTransactionWithOutputs: jest
         .fn()
         .mockResolvedValue(mockNinjaTransaction)
@@ -48,8 +48,8 @@ describe('pay function', () => {
       uploadURL: 'https://test.upload.com',
       publicURL: 'https://test.public.com',
       status: 'success'
-    };
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    }
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockPayResponse)
     }))
 
@@ -70,15 +70,15 @@ describe('pay function', () => {
       ...mockConfig,
       clientPrivateKey: undefined
     }
-    const mockActionResponse = { txid: 'mockTxid' };
-    (createAction as jest.Mock).mockResolvedValue(mockActionResponse)
+    const mockActionResponse = { txid: 'mockTxid' }
+    ;(createAction as jest.Mock).mockResolvedValue(mockActionResponse)
 
     const mockPayResponse = {
       uploadURL: 'https://test.upload.com',
       publicURL: 'https://test.public.com',
       status: 'success'
-    };
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    }
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockPayResponse)
     }))
 
@@ -111,8 +111,8 @@ describe('pay function', () => {
       status: 'error',
       description: 'Payment failed',
       code: 'PAYMENT_ERROR'
-    };
-    (createAction as jest.Mock).mockResolvedValue(mockErrorResponse)
+    }
+    ;(createAction as jest.Mock).mockResolvedValue(mockErrorResponse)
 
     await expect(
       pay({ ...mockPayParams, config: configWithoutPrivateKey })
@@ -134,8 +134,8 @@ describe('pay function', () => {
       status: 'error',
       description: 'Invalid order ID',
       code: 'INVALID_ORDER'
-    };
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    }
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockErrorResponse)
     }))
 
@@ -159,10 +159,9 @@ describe('pay function', () => {
       status: 'error',
       description: 'Payment failed',
       code: 'PAYMENT_ERROR'
-    };
-    (createAction as jest.Mock).mockResolvedValue(mockErrorResponse);
-
-    (derivePaymentInfo as jest.Mock).mockImplementation((params) => {
+    }
+    ;(createAction as jest.Mock).mockResolvedValue(mockErrorResponse)
+    ;(derivePaymentInfo as jest.Mock).mockImplementation(params => {
       expect(params.config).toEqual(CONFIG)
       return Promise.resolve(mockPaymentInfo)
     })

@@ -1,6 +1,6 @@
-import { invoice } from '../invoice'
+import { invoice } from '../components/invoice'
 import { AuthriteClient } from 'authrite-js'
-import { CONFIG } from '../defaults'
+import { CONFIG } from '../components/defaults'
 
 jest.mock('authrite-js')
 
@@ -23,9 +23,9 @@ describe('invoice function', () => {
       ORDER_ID: 'mockOrderId',
       publicURL: 'https://test.nanostore.com/file',
       status: 'success'
-    };
+    }
 
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockInvoiceResponse)
     }))
 
@@ -46,9 +46,9 @@ describe('invoice function', () => {
       status: 'error',
       description: 'Invalid file size',
       code: 'INVALID_SIZE'
-    };
+    }
 
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockErrorResponse)
     }))
 
@@ -77,9 +77,9 @@ describe('invoice function', () => {
       ORDER_ID: 'mockOrderId',
       publicURL: 'https://default.nanostore.com/file',
       status: 'success'
-    };
+    }
 
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockInvoiceResponse)
     }))
 
@@ -103,8 +103,8 @@ describe('invoice function', () => {
       ORDER_ID: 'mockOrderId',
       publicURL: 'https://test.nanostore.com/file',
       status: 'success'
-    };
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    }
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockInvoiceResponse)
     }))
 
@@ -119,8 +119,8 @@ describe('invoice function', () => {
       ORDER_ID: 'mockOrderId',
       publicURL: 'https://test.nanostore.com/file',
       status: 'success'
-    };
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    }
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockInvoiceResponse)
     }))
 
@@ -150,9 +150,9 @@ describe('invoice function', () => {
       status: 'error',
       description: 'Server error',
       code: 'SERVER_ERROR'
-    };
+    }
 
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockErrorResponse)
     }))
 
@@ -177,8 +177,8 @@ describe('invoice function', () => {
     const customConfig = {
       nanostoreURL: 'https://custom.nanostore.com',
       clientPrivateKey: 'customPrivateKey'
-    };
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    }
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue({})
     }))
 
@@ -219,13 +219,13 @@ describe('invoice function', () => {
       const thrownError = await invoice({
         fileSize: 1024,
         retentionPeriod: 60
-      }).catch((e) => e)
+      }).catch(e => e)
       expect(thrownError.code).toBe(errorResponse.code)
     }
   })
   it('should initialize AuthriteClient without clientPrivateKey when not provided', async () => {
-    const configWithoutPrivateKey = { ...CONFIG, clientPrivateKey: undefined };
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    const configWithoutPrivateKey = { ...CONFIG, clientPrivateKey: undefined }
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue({})
     }))
 

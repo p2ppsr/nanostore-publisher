@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>31/31</span>
+                <span class='fraction'>32/32</span>
             </div>
         
             
@@ -186,7 +186,29 @@
 <a name='L121'></a><a href='#L121'>121</a>
 <a name='L122'></a><a href='#L122'>122</a>
 <a name='L123'></a><a href='#L123'>123</a>
-<a name='L124'></a><a href='#L124'>124</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
@@ -227,7 +249,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -242,6 +266,9 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -272,9 +299,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -287,7 +324,14 @@
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -318,23 +362,23 @@ import { Config } from './types/types'
 &nbsp;
 // Extend the CreateActionParams type
 interface ExtendedCreateActionParams extends CreateActionParams {
-  topics?: string[]
+  topics?: string[];
 }
 &nbsp;
 interface PayParams {
-  config?: Config
-  description: string
-  orderID: string
-  recipientPublicKey: string
-  amount: number
+  config?: Config;
+  description: string;
+  orderID: string;
+  recipientPublicKey: string;
+  amount: number;
 }
 &nbsp;
 interface PaymentResponse {
-  uploadURL: string
-  publicURL: string
-  status: string
-  description?: string
-  code?: string
+  uploadURL: string;
+  publicURL: string;
+  status: string;
+  description?: string;
+  code?: string;
 }
 &nbsp;
 /**
@@ -350,22 +394,27 @@ interface PaymentResponse {
  *
  * @returns The pay object, contains the `uploadURL` and the `publicURL` and the `status`'.
  */
-export async function pay({
-  config = CONFIG,
-  description,
-  orderID,
-  recipientPublicKey,
-  amount
-}: PayParams = <span class="branch-0 cbranch-no" title="branch not covered" >{} as PayParams)</span>: Promise&lt;PaymentResponse&gt; {
+export async function pay(
+  {
+    config = CONFIG,
+    description,
+    orderID,
+    recipientPublicKey,
+    amount
+  }: PayParams = <span class="branch-0 cbranch-no" title="branch not covered" >{} as PayParams</span>
+): Promise&lt;PaymentResponse&gt; {
   // Input validation
   if (typeof amount !== 'number' || amount &lt;= 0) {
-    throw new Error('Invalid amount');
+    throw new Error('Invalid amount')
   }
   if (typeof orderID !== 'string' || orderID.trim() === '') {
-    throw new Error('Invalid order ID');
+    throw new Error('Invalid order ID')
   }
-  if (typeof recipientPublicKey !== 'string' || recipientPublicKey.trim() === '') {
-    throw new Error('Invalid recipient public key');
+  if (
+    typeof recipientPublicKey !== 'string' ||
+    recipientPublicKey.trim() === ''
+  ) {
+    throw new Error('Invalid recipient public key')
   }
 &nbsp;
   // Derive payment information
@@ -394,10 +443,20 @@ export async function pay({
       labels: ['nanostore'],
       topics: ['UHRP']
     } as ExtendedCreateActionParams)
-    if (typeof payment === 'object' &amp;&amp; payment !== null &amp;&amp; 'status' in payment) {
+    if (
+      typeof payment === 'object' &amp;&amp;
+      payment !== null &amp;&amp;
+      'status' in payment
+    ) {
       if (payment.status === 'error') {
-        const errorPayment = payment as { status: string; description?: string; code?: string }
-        const e: Error &amp; { code?: string } = new Error(errorPayment.description || <span class="branch-1 cbranch-no" title="branch not covered" >'Unknown error')</span>
+        const errorPayment = payment as {
+          status: string;
+          description?: string;
+          code?: string;
+        }
+        const e: Error &amp; { code?: string } = new Error(
+          errorPayment.description || <span class="branch-1 cbranch-no" title="branch not covered" >'Unknown error'</span>
+        )
         if (errorPayment.code) {
           e.code = errorPayment.code
         }
@@ -407,7 +466,12 @@ export async function pay({
   }
 &nbsp;
   // Initialize a new AuthriteClient with SDK or private key signing strategy depending on the config
-  const client = new AuthriteClient(config.nanostoreURL, config.clientPrivateKey ? { clientPrivateKey: config.clientPrivateKey } : undefined)
+  const client = new AuthriteClient(
+    config.nanostoreURL,
+    config.clientPrivateKey
+      ? { clientPrivateKey: config.clientPrivateKey }
+      : undefined
+  )
 &nbsp;
   // Make the pay request
   const pay = await client.createSignedRequest('/pay', {
@@ -415,11 +479,13 @@ export async function pay({
     transaction: payment
       ? {
           ...payment,
-          outputs: [{
-            vout: 0,
-            satoshis: amount,
-            derivationSuffix: paymentInfo.derivationSuffix
-          }]
+          outputs: [
+            {
+              vout: 0,
+              satoshis: amount,
+              derivationSuffix: paymentInfo.derivationSuffix
+            }
+          ]
         }
       : <span class="branch-1 cbranch-no" title="branch not covered" >undefined,</span>
     orderID
@@ -439,7 +505,7 @@ export async function pay({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2024-09-09T14:42:52.053Z
+                at 2024-09-13T11:53:46.697Z
             </div>
         <script src="prettify.js"></script>
         <script>

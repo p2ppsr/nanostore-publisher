@@ -1,44 +1,44 @@
 import { AuthriteClient } from 'authrite-js'
 import { CONFIG } from './defaults'
-import { Config } from './types/types'
+import { Config } from '../types/types'
 
 interface Input {
   // Define the structure of an input
-  txid: string;
-  vout: number;
-  satoshis: number;
-  scriptSig: string;
+  txid: string
+  vout: number
+  satoshis: number
+  scriptSig: string
 }
 
 interface MapiResponse {
   // Define the structure of a mapi response
-  payload: string;
-  signature: string;
-  publicKey: string;
+  payload: string
+  signature: string
+  publicKey: string
 }
 
 interface Payment {
-  inputs: Input[];
-  mapiResponses: MapiResponse[];
-  rawTx: string;
+  inputs: Input[]
+  mapiResponses: MapiResponse[]
+  rawTx: string
 }
 
 interface SubmitPaymentParams {
-  config?: Config;
-  orderID: string;
-  amount: number;
-  payment: Payment;
-  vout: number;
-  derivationPrefix: string;
-  derivationSuffix: string;
+  config?: Config
+  orderID: string
+  amount: number
+  payment: Payment
+  vout: number
+  derivationPrefix: string
+  derivationSuffix: string
 }
 
 interface PaymentResult {
-  uploadURL: string;
-  publicURL: string;
-  status: string;
-  description?: string;
-  code?: string;
+  uploadURL: string
+  publicURL: string
+  status: string
+  description?: string
+  code?: string
 }
 
 /**

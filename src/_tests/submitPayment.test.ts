@@ -1,6 +1,6 @@
-import { submitPayment } from '../submitPayment'
+import { submitPayment } from '../components/submitPayment'
 import { AuthriteClient } from 'authrite-js'
-import { CONFIG } from '../defaults'
+import { CONFIG } from '../components/defaults'
 
 jest.mock('authrite-js')
 
@@ -44,9 +44,9 @@ describe('submitPayment function', () => {
       uploadURL: 'https://test.upload.com',
       publicURL: 'https://test.public.com',
       status: 'success'
-    };
+    }
 
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockPaymentResult)
     }))
 
@@ -63,9 +63,9 @@ describe('submitPayment function', () => {
       status: 'error',
       description: 'Payment failed',
       code: 'PAYMENT_ERROR'
-    };
+    }
 
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockErrorResponse)
     }))
 
@@ -89,9 +89,9 @@ describe('submitPayment function', () => {
       uploadURL: 'https://test.upload.com',
       publicURL: 'https://test.public.com',
       status: 'success'
-    };
+    }
 
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockPaymentResult)
     }))
 
@@ -162,9 +162,9 @@ describe('submitPayment function', () => {
       uploadURL: 'https://test.upload.com',
       publicURL: 'https://test.public.com',
       status: 'success'
-    });
+    })
 
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: mockCreateSignedRequest
     }))
 

@@ -3,20 +3,20 @@ import { CONFIG } from './defaults'
 import { Config } from './types/types'
 
 interface InvoiceParams {
-  config?: Config;
-  fileSize: number;
-  retentionPeriod: number;
+  config?: Config
+  fileSize: number
+  retentionPeriod: number
 }
 
 interface InvoiceResponse {
-  message: string;
-  identityKey: string;
-  amount: number;
-  ORDER_ID: string;
-  publicURL: string;
-  status: string;
-  description?: string;
-  code?: string;
+  message: string
+  identityKey: string
+  amount: number
+  ORDER_ID: string
+  publicURL: string
+  status: string
+  description?: string
+  code?: string
 }
 
 /**

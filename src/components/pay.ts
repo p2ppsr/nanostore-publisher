@@ -7,23 +7,23 @@ import { Config } from './types/types'
 
 // Extend the CreateActionParams type
 interface ExtendedCreateActionParams extends CreateActionParams {
-  topics?: string[];
+  topics?: string[]
 }
 
 interface PayParams {
-  config?: Config;
-  description: string;
-  orderID: string;
-  recipientPublicKey: string;
-  amount: number;
+  config?: Config
+  description: string
+  orderID: string
+  recipientPublicKey: string
+  amount: number
 }
 
 interface PaymentResponse {
-  uploadURL: string;
-  publicURL: string;
-  status: string;
-  description?: string;
-  code?: string;
+  uploadURL: string
+  publicURL: string
+  status: string
+  description?: string
+  code?: string
 }
 
 /**
@@ -95,9 +95,9 @@ export async function pay(
     ) {
       if (payment.status === 'error') {
         const errorPayment = payment as {
-          status: string;
-          description?: string;
-          code?: string;
+          status: string
+          description?: string
+          code?: string
         }
         const e: Error & { code?: string } = new Error(
           errorPayment.description || 'Unknown error'
