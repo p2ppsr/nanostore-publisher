@@ -72,7 +72,7 @@ export async function publishFile(
 
     // Add status to the upload result
     return { ...uploadResult, status: 'success' }
-  } catch (e) {
+  } catch (e: unknown) {
     if (
       e instanceof NanoStorePublisherError &&
       (e.code === 'ERR_UI_FILE_MISSING' ||
@@ -82,10 +82,17 @@ export async function publishFile(
     }
 
     // Wrap any other error in ErrorWithCode for consistent handling
-    // return known error rather than undefined
-    throw new ErrorWithCode(
-      `Failed to publish file: ${e.message}`,
-      'ERR_PUBLISH_FILE_FAILED'
-    )
+    if (e instanceof Error) {
+      throw new ErrorWithCode(
+        `Failed to publish file: ${e.message}`,
+        'ERR_PUBLISH_FILE_FAILED'
+      )
+    } else {
+      // Handle unknown errors that may not be instances of Error
+      throw new ErrorWithCode(
+        'An unknown error occurred while publishing the file',
+        'ERR_PUBLISH_FILE_FAILED'
+      )
+    }
   }
 }

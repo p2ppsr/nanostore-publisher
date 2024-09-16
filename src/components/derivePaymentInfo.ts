@@ -105,14 +105,20 @@ export async function derivePaymentInfo(
         description: 'Payment for file hosting'
       }
     } as PaymentInfo
-  } catch (e) {
+  } catch (e: unknown) {
     // Re-throw caught errors to be handled by the calling function
     if (e instanceof ErrorWithCode) {
       throw e
-    } else {
+    } else if (e instanceof Error) {
       // Wrap any other errors in a generic error
       throw new ErrorWithCode(
         e.message || 'Unknown error in derivePaymentInfo',
+        'ERR_UNKNOWN'
+      )
+    } else {
+      // Handle cases where `e` is not an instance of `Error`
+      throw new ErrorWithCode(
+        'An unknown non-error value was thrown in derivePaymentInfo',
         'ERR_UNKNOWN'
       )
     }
