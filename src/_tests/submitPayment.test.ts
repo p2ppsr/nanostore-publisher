@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { submitPayment } from '../components/submitPayment'
 import { AuthriteClient } from 'authrite-js'
 import { CONFIG } from '../components/defaults'
@@ -62,7 +63,7 @@ describe('submitPayment function', () => {
     const mockErrorResponse = {
       status: 'error',
       description: 'Payment failed',
-      code: 'PAYMENT_ERROR'
+      code: 'ERR_SUBMIT_PAYMENT'
     }
 
     ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
@@ -77,7 +78,9 @@ describe('submitPayment function', () => {
       await submitPayment(mockSubmitPaymentParams)
     } catch (error) {
       if (error instanceof Error && 'code' in error) {
-        expect((error as Error & { code: string }).code).toBe('PAYMENT_ERROR')
+        expect((error as Error & { code: string }).code).toBe(
+          'ERR_SUBMIT_PAYMENT'
+        )
       } else {
         fail('Expected error with code property')
       }

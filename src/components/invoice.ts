@@ -1,23 +1,7 @@
 import { AuthriteClient } from 'authrite-js'
 import { CONFIG } from './defaults'
-import { Config } from './types/types'
-
-interface InvoiceParams {
-  config?: Config
-  fileSize: number
-  retentionPeriod: number
-}
-
-interface InvoiceResponse {
-  message: string
-  identityKey: string
-  amount: number
-  ORDER_ID: string
-  publicURL: string
-  status: string
-  description?: string
-  code?: string
-}
+import { InvoiceParams, InvoiceResponse } from '../types/invoice'
+import { ErrorWithCode } from '../utils/errors' // Assuming ErrorWithCode is in utils/errors
 
 /**
  * Creates an invoice for a NanoStore file hosting contract.
@@ -38,31 +22,52 @@ export async function invoice(
 ): Promise<InvoiceResponse> {
   // Input validation
   if (typeof fileSize !== 'number' || fileSize <= 0) {
-    throw new Error('Invalid file size')
+    throw new ErrorWithCode('Invalid file size', 'ERR_INVALID_FILE_SIZE')
   }
   if (typeof retentionPeriod !== 'number' || retentionPeriod <= 0) {
-    throw new Error('Invalid retention period')
+    throw new ErrorWithCode(
+      'Invalid retention period',
+      'ERR_INVALID_RETENTION_PERIOD'
+    )
   }
 
-  // Initialize a new Authrite client depending on the config
-  const client = new AuthriteClient(
-    config.nanostoreURL,
-    config.clientPrivateKey
-      ? { clientPrivateKey: config.clientPrivateKey }
-      : undefined
-  )
+  let client: typeof AuthriteClient
+  try {
+    // Initialize a new Authrite client depending on the config
+    client = new AuthriteClient(
+      config.nanostoreURL,
+      config.clientPrivateKey
+        ? { clientPrivateKey: config.clientPrivateKey }
+        : undefined
+    )
+  } catch (e) {
+    throw new ErrorWithCode(
+      `Failed to initialize Authrite client:${e}`,
+      'ERR_CLIENT_INITIALIZATION'
+    )
+  }
 
-  // Send a request to get the invoice
-  const invoice = await client.createSignedRequest('/invoice', {
-    fileSize,
-    retentionPeriod
-  })
+  let invoice
+  try {
+    // Send a request to get the invoice
+    invoice = await client.createSignedRequest('/invoice', {
+      fileSize,
+      retentionPeriod
+    })
+  } catch (e) {
+    throw new ErrorWithCode(
+      `Failed to retrieve invoice:${e}`,
+      'ERR_INVOICE_REQUEST'
+    )
+  }
 
   // Throw an error if an HTTP error is returned
   if (invoice.status === 'error') {
-    const e: Error & { code?: string } = new Error(invoice.description)
-    e.code = invoice.code
-    throw e
+    throw new ErrorWithCode(
+      invoice.description || 'Unknown error',
+      invoice.code || 'ERR_INVOICE_ERROR'
+    )
   }
+
   return invoice as InvoiceResponse
 }

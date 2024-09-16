@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CONFIG } from '../components/defaults'
 import { Config } from '../types/types'
 

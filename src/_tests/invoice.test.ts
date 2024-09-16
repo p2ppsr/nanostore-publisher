@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { invoice } from '../components/invoice'
 import { AuthriteClient } from 'authrite-js'
 import { CONFIG } from '../components/defaults'

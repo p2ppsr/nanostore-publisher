@@ -5,10 +5,23 @@ export interface ErrorWithCode extends Error {
   code?: string
 }
 
-interface Config {
+export interface Config {
   nanostoreURL: string
   clientPrivateKey?: string
   dojoURL?: string
+}
+
+interface MapiResponse {
+  // Define the structure of a mapi response
+  payload: string
+  signature: string
+  publicKey: string
+}
+
+interface Payment {
+  inputs: Input[]
+  mapiResponses: MapiResponse[]
+  rawTx: string
 }
 
 export interface UploadParams {

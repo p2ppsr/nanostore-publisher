@@ -2,26 +2,9 @@ import { CONFIG } from './defaults'
 import { invoice } from './invoice'
 import { pay } from './pay'
 import { upload } from './upload'
-import { Config } from './types/types'
-
-interface File {
-  size: number
-  type: string
-  arrayBuffer(): Promise<ArrayBuffer>
-}
-
-interface PublishFileParams {
-  config?: Config
-  file: File
-  retentionPeriod: number
-  progressTracker?: (progress: number) => void
-}
-
-interface UploadResult {
-  hash: string
-  publicURL: string
-  status: string
-}
+import { UploadResult } from '../types/types'
+import { PublishFileParams } from '../types/publishFile'
+import { NanoStorePublisherError, ErrorWithCode } from '../utils/errors'
 
 /**
  * High-level function to automatically pay an invoice, using a Babbage SDK
@@ -34,7 +17,7 @@ interface UploadResult {
  * @param obj.retentionPeriod - how long the file should be retained
  * @param obj.progressTracker - function to provide updates on upload progress
  *
- * @returns The upload object, contains the `hash` and the `publicURL` and the `status`'.
+ * @returns The upload object, contains the `hash` and the `publicURL` and the `status`.
  */
 export async function publishFile(
   {
@@ -47,16 +30,16 @@ export async function publishFile(
   try {
     // Validate required params
     if (!file) {
-      const e: Error & { code?: string } = new Error('Choose a file to upload!')
-      e.code = 'ERR_UI_FILE_MISSING'
-      throw e
+      throw new NanoStorePublisherError(
+        'File is required for upload.',
+        'ERR_UI_FILE_MISSING'
+      )
     }
     if (!retentionPeriod) {
-      const e: Error & { code?: string } = new Error(
-        'Specify how long to host the file!'
+      throw new NanoStorePublisherError(
+        'Retention period must be specified.',
+        'ERR_UI_HOST_DURATION_MISSING'
       )
-      e.code = 'ERR_UI_HOST_DURATION_MISSING'
-      throw e
     }
 
     // Get a payment invoice for the file to upload
@@ -75,7 +58,7 @@ export async function publishFile(
       amount: invoiceResult.amount
     })
 
-    // Upload the file after payment as completed
+    // Upload the file after payment is completed
     const uploadResult = await upload({
       config: {
         nanostoreURL: config.nanostoreURL
@@ -91,14 +74,18 @@ export async function publishFile(
     return { ...uploadResult, status: 'success' }
   } catch (e) {
     if (
-      e instanceof Error &&
-      'code' in e &&
+      e instanceof NanoStorePublisherError &&
       (e.code === 'ERR_UI_FILE_MISSING' ||
         e.code === 'ERR_UI_HOST_DURATION_MISSING')
     ) {
       throw e
     }
-    console.error(e)
-    return undefined
+
+    // Wrap any other error in ErrorWithCode for consistent handling
+    // return known error rather than undefined
+    throw new ErrorWithCode(
+      `Failed to publish file: ${e.message}`,
+      'ERR_PUBLISH_FILE_FAILED'
+    )
   }
 }

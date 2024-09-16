@@ -1,45 +1,7 @@
 import { AuthriteClient } from 'authrite-js'
 import { CONFIG } from './defaults'
-import { Config } from '../types/types'
-
-interface Input {
-  // Define the structure of an input
-  txid: string
-  vout: number
-  satoshis: number
-  scriptSig: string
-}
-
-interface MapiResponse {
-  // Define the structure of a mapi response
-  payload: string
-  signature: string
-  publicKey: string
-}
-
-interface Payment {
-  inputs: Input[]
-  mapiResponses: MapiResponse[]
-  rawTx: string
-}
-
-interface SubmitPaymentParams {
-  config?: Config
-  orderID: string
-  amount: number
-  payment: Payment
-  vout: number
-  derivationPrefix: string
-  derivationSuffix: string
-}
-
-interface PaymentResult {
-  uploadURL: string
-  publicURL: string
-  status: string
-  description?: string
-  code?: string
-}
+import { SubmitPaymentParams, PaymentResult } from '../types/submitPayments'
+import { ErrorWithCode, NanoStorePublisherError } from '../utils/errors'
 
 /**
  * Submit a manually-created payment for NanoStore hosting. Obtain an output
@@ -57,7 +19,7 @@ interface PaymentResult {
  * @param obj.derivationPrefix The value returned from `derivePaymentInfo`
  * @param obj.derivationSuffix The value returned from `derivePaymentInfo`
  *
- * @returns The paymentResult object, contains the `uploadURL` and the `publicURL` and the `status`'.
+ * @returns The paymentResult object, contains the `uploadURL` and the `publicURL` and the `status`.
  */
 export async function submitPayment(
   {
@@ -72,45 +34,74 @@ export async function submitPayment(
 ): Promise<PaymentResult> {
   // Input validation
   if (typeof amount !== 'number' || amount <= 0 || !Number.isInteger(amount)) {
-    throw new Error('Invalid amount')
+    throw new NanoStorePublisherError(
+      'Invalid amount. Must be a positive integer.',
+      'ERR_INVALID_AMOUNT'
+    )
   }
   if (typeof orderID !== 'string' || orderID.trim() === '') {
-    throw new Error('Invalid order ID')
+    throw new NanoStorePublisherError(
+      'Invalid order ID. Must be a non-empty string.',
+      'ERR_INVALID_ORDER_ID'
+    )
   }
   if (typeof vout !== 'number' || vout < 0) {
-    throw new Error('Invalid vout')
+    throw new NanoStorePublisherError(
+      'Invalid vout. Must be a non-negative number.',
+      'ERR_INVALID_VOUT'
+    )
   }
   if (!payment || typeof payment !== 'object') {
-    throw new Error('Invalid payment object')
+    throw new NanoStorePublisherError(
+      'Invalid payment object. Must be an object.',
+      'ERR_INVALID_PAYMENT'
+    )
   }
   if (typeof derivationPrefix !== 'string' || derivationPrefix.trim() === '') {
-    throw new Error('Invalid derivation prefix')
+    throw new NanoStorePublisherError(
+      'Invalid derivation prefix. Must be a non-empty string.',
+      'ERR_INVALID_DERIVATION_PREFIX'
+    )
   }
   if (typeof derivationSuffix !== 'string' || derivationSuffix.trim() === '') {
-    throw new Error('Invalid derivation suffix')
+    throw new NanoStorePublisherError(
+      'Invalid derivation suffix. Must be a non-empty string.',
+      'ERR_INVALID_DERIVATION_SUFFIX'
+    )
   }
 
-  const client = new AuthriteClient(config.nanostoreURL, {
-    clientPrivateKey: config.clientPrivateKey
-  })
-  const paymentResult = await client.createSignedRequest('/pay', {
-    derivationPrefix,
-    transaction: {
-      ...payment,
-      outputs: [
-        {
-          vout,
-          satoshis: amount,
-          derivationSuffix
-        }
-      ]
-    },
-    orderID
-  })
-  if (paymentResult.status === 'error') {
-    const e: Error & { code?: string } = new Error(paymentResult.description)
-    e.code = paymentResult.code
-    throw e
+  try {
+    const client = new AuthriteClient(config.nanostoreURL, {
+      clientPrivateKey: config.clientPrivateKey
+    })
+
+    const paymentResult = await client.createSignedRequest('/pay', {
+      derivationPrefix,
+      transaction: {
+        ...payment,
+        outputs: [
+          {
+            vout,
+            satoshis: amount,
+            derivationSuffix
+          }
+        ]
+      },
+      orderID
+    })
+
+    if (paymentResult.status === 'error') {
+      throw new NanoStorePublisherError(
+        paymentResult.description || 'Payment failed due to an unknown error.',
+        paymentResult.code || 'ERR_PAYMENT_FAILED'
+      )
+    }
+
+    return paymentResult as PaymentResult
+  } catch (e) {
+    throw new ErrorWithCode(
+      `Failed to submit payment:${e}`,
+      'ERR_SUBMIT_PAYMENT'
+    )
   }
-  return paymentResult as PaymentResult
 }

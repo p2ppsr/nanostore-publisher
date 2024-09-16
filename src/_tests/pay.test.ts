@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { pay } from '../components/pay'
 import { derivePaymentInfo } from '../components/derivePaymentInfo'
 import { createAction } from '@babbage/sdk-ts'
@@ -5,7 +6,7 @@ import { AuthriteClient } from 'authrite-js'
 import { Ninja } from 'ninja-base'
 import { CONFIG } from '../components/defaults'
 
-jest.mock('../derivePaymentInfo')
+jest.mock('../components/derivePaymentInfo')
 jest.mock('@babbage/sdk-ts')
 jest.mock('authrite-js')
 jest.mock('ninja-base')
@@ -116,13 +117,15 @@ describe('pay function', () => {
 
     await expect(
       pay({ ...mockPayParams, config: configWithoutPrivateKey })
-    ).rejects.toThrow('Payment failed')
+    ).rejects.toThrow('Failed to create payment') // Updated message
 
     try {
       await pay({ ...mockPayParams, config: configWithoutPrivateKey })
     } catch (error) {
       if (error instanceof Error && 'code' in error) {
-        expect((error as Error & { code: string }).code).toBe('PAYMENT_ERROR')
+        expect((error as Error & { code: string }).code).toBe(
+          'ERR_CREATE_PAYMENT'
+        )
       } else {
         fail('Expected error with code property')
       }
@@ -140,14 +143,14 @@ describe('pay function', () => {
     }))
 
     await expect(pay({ ...mockPayParams, config: mockConfig })).rejects.toThrow(
-      'Invalid order ID'
+      'Failed to complete pay request' // Updated message
     )
 
     try {
       await pay({ ...mockPayParams, config: mockConfig })
     } catch (error) {
       if (error instanceof Error && 'code' in error) {
-        expect((error as Error & { code: string }).code).toBe('INVALID_ORDER')
+        expect((error as Error & { code: string }).code).toBe('ERR_PAY_REQUEST')
       } else {
         fail('Expected error with code property')
       }
@@ -158,7 +161,7 @@ describe('pay function', () => {
     const mockErrorResponse = {
       status: 'error',
       description: 'Payment failed',
-      code: 'PAYMENT_ERROR'
+      code: 'ERR_CREATE_PAYMENT'
     }
     ;(createAction as jest.Mock).mockResolvedValue(mockErrorResponse)
     ;(derivePaymentInfo as jest.Mock).mockImplementation(params => {
@@ -171,8 +174,8 @@ describe('pay function', () => {
       fail('Expected an error to be thrown')
     } catch (error) {
       if (error instanceof Error) {
-        expect(error.message).toBe('Payment failed')
-        expect((error as any).code).toBe('PAYMENT_ERROR')
+        expect(error.message).toBe('Failed to create payment') // Updated message
+        expect((error as any).code).toBe('ERR_CREATE_PAYMENT')
       } else {
         fail('Expected an Error to be thrown')
       }

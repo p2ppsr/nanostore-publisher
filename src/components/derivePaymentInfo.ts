@@ -4,13 +4,9 @@ import { CONFIG } from './defaults'
 import { getPaymentAddress } from 'sendover'
 import { invoice3241645161d8 } from 'ninja-base'
 import crypto from 'crypto'
-import { Config, PaymentInfo } from './types/types'
-
-interface DerivePaymentInfoParams {
-  config?: Config
-  recipientPublicKey: string
-  amount: number
-}
+import { PaymentInfo } from '../types/types'
+import { DerivePaymentInfoParams } from '../types/derivePaymentInfo'
+import { ErrorWithCode } from '../utils/errors' // Assuming ErrorWithCode is in errors.ts
 
 /**
  * Derives an output to pay for the NanoStore file hosting contract. After
@@ -30,52 +26,95 @@ export async function derivePaymentInfo(
     amount
   }: DerivePaymentInfoParams = {} as DerivePaymentInfoParams
 ): Promise<PaymentInfo> {
-  if (!recipientPublicKey || typeof recipientPublicKey !== 'string') {
-    throw new Error('Invalid recipient public key')
-  }
-  if (typeof amount !== 'number' || amount <= 0) {
-    throw new Error('Invalid amount')
-  }
+  try {
+    // Input validation
+    if (!recipientPublicKey || typeof recipientPublicKey !== 'string') {
+      throw new ErrorWithCode(
+        'Invalid recipient public key',
+        'ERR_INVALID_PUBLIC_KEY'
+      )
+    }
+    if (typeof amount !== 'number' || amount <= 0) {
+      throw new ErrorWithCode('Invalid amount', 'ERR_INVALID_AMOUNT')
+    }
 
-  // Create a derivation prefix and suffix to derive the public key
-  const derivationPrefix = crypto.randomBytes(10).toString('base64')
-  const derivationSuffix = crypto.randomBytes(10).toString('base64')
+    // Create a derivation prefix and suffix to derive the public key
+    let derivationPrefix: string
+    let derivationSuffix: string
+    try {
+      derivationPrefix = crypto.randomBytes(10).toString('base64')
+      derivationSuffix = crypto.randomBytes(10).toString('base64')
+    } catch (cryptoError) {
+      throw new ErrorWithCode(
+        `Failed to generate random bytes for derivation:${cryptoError}`,
+        'ERR_CRYPTO_FAILURE'
+      )
+    }
 
-  // Derive the public key used for creating the output script using a privateKey or the SDK
-  let derivedPublicKey: string
-  if (config.clientPrivateKey) {
-    derivedPublicKey = getPaymentAddress({
-      senderPrivateKey: config.clientPrivateKey,
-      recipientPublicKey,
-      invoiceNumber: invoice3241645161d8(derivationPrefix, derivationSuffix),
-      returnType: 'publicKey'
-    })
-  } else {
-    derivedPublicKey = await getPublicKey({
-      protocolID: [2, '3241645161d8'],
-      keyID: `${derivationPrefix} ${derivationSuffix}`,
-      counterparty: recipientPublicKey
-    })
-  }
+    // Derive the public key used for creating the output script
+    let derivedPublicKey: string
+    try {
+      if (config.clientPrivateKey) {
+        derivedPublicKey = getPaymentAddress({
+          senderPrivateKey: config.clientPrivateKey,
+          recipientPublicKey,
+          invoiceNumber: invoice3241645161d8(
+            derivationPrefix,
+            derivationSuffix
+          ),
+          returnType: 'publicKey'
+        })
+      } else {
+        derivedPublicKey = await getPublicKey({
+          protocolID: [2, '3241645161d8'],
+          keyID: `${derivationPrefix} ${derivationSuffix}`,
+          counterparty: recipientPublicKey
+        })
+      }
+    } catch (deriveError) {
+      throw new ErrorWithCode(
+        `Failed to derive public key:${deriveError}`,
+        'ERR_DERIVE_PUBLIC_KEY'
+      )
+    }
 
-  // Create an output script that can only be unlocked with the corresponding derived private key
-  const script = new bsv.Script(
-    bsv.Script.fromAddress(
-      bsv.Address.fromPublicKey(bsv.PublicKey.fromString(derivedPublicKey))
-    )
-  ).toHex()
+    // Create an output script that can only be unlocked with the corresponding derived private key
+    let script: string
+    try {
+      script = new bsv.Script(
+        bsv.Script.fromAddress(
+          bsv.Address.fromPublicKey(bsv.PublicKey.fromString(derivedPublicKey))
+        )
+      ).toHex()
+    } catch (scriptError) {
+      throw new ErrorWithCode(
+        `Failed to create output script:${scriptError}`,
+        'ERR_CREATE_SCRIPT'
+      )
+    }
 
-  // Return the new output
-  const paymentInfo: PaymentInfo = {
-    derivationPrefix,
-    derivationSuffix,
-    derivedPublicKey,
-    output: {
-      script,
-      satoshis: amount,
-      basket: 'nanostore',
-      description: 'Payment for file hosting'
+    // Return the new output
+    return {
+      derivationPrefix,
+      derivationSuffix,
+      derivedPublicKey,
+      output: {
+        script,
+        satoshis: amount,
+        basket: 'nanostore',
+        description: 'Payment for file hosting'
+      }
+    } as PaymentInfo
+  } catch (e) {
+    // Re-throw caught errors to be handled by the calling function
+    if (e instanceof ErrorWithCode) {
+      throw e
+    } else {
+      // Wrap any other errors in a generic error
+      throw new ErrorWithCode(
+        e.message || 'Unknown error in derivePaymentInfo',
+        'ERR_UNKNOWN'
+      )
     }
   }
-  return paymentInfo
 }

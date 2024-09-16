@@ -138,7 +138,10 @@ describe('derivePaymentInfo function', () => {
         recipientPublicKey: mockRecipientPublicKey,
         amount: mockAmount
       })
-    ).rejects.toThrow('Mock getPaymentAddress error')
+    ).rejects.toMatchObject({
+      code: 'ERR_DERIVE_PUBLIC_KEY', // Testing the error code
+      message: 'Failed to derive public key' // Optional: test the message as well if necessary
+    })
   })
 
   it('should handle errors from getPublicKey', async () => {
@@ -151,7 +154,10 @@ describe('derivePaymentInfo function', () => {
         recipientPublicKey: mockRecipientPublicKey,
         amount: mockAmount
       })
-    ).rejects.toThrow('Mock getPublicKey error')
+    ).rejects.toMatchObject({
+      code: 'ERR_DERIVE_PUBLIC_KEY', // Testing the error code
+      message: 'Failed to derive public key' // Optional: test the message as well
+    })
   })
 
   it('should generate unique derivation prefix and suffix', async () => {
@@ -179,28 +185,22 @@ describe('derivePaymentInfo function', () => {
         recipientPublicKey: '',
         amount: -1
       })
-    ).rejects.toThrow('Invalid recipient public key')
+    ).rejects.toMatchObject({
+      code: 'ERR_INVALID_PUBLIC_KEY',
+      message: 'Invalid recipient public key'
+    })
 
     await expect(
       derivePaymentInfo({
         recipientPublicKey: 'validKey',
         amount: -1
       })
-    ).rejects.toThrow('Invalid amount')
-  })
-
-  it('should create a valid bsv script', async () => {
-    const result = await derivePaymentInfo({
-      recipientPublicKey: mockRecipientPublicKey,
-      amount: mockAmount
+    ).rejects.toMatchObject({
+      code: 'ERR_INVALID_AMOUNT',
+      message: 'Invalid amount'
     })
-
-    expect(bsv.Script).toHaveBeenCalled()
-    expect(bsv.Script.fromAddress).toHaveBeenCalled()
-    expect(bsv.Address.fromPublicKey).toHaveBeenCalled()
-    expect(bsv.PublicKey.fromString).toHaveBeenCalled()
-    expect(result.output.script).toBe('mockScriptHex')
   })
+
   it('should create a valid bsv script', async () => {
     const result = await derivePaymentInfo({
       recipientPublicKey: mockRecipientPublicKey,

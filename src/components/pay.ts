@@ -1,30 +1,14 @@
-import { createAction, CreateActionParams } from '@babbage/sdk-ts'
+import { createAction } from '@babbage/sdk-ts'
 import { CONFIG } from './defaults'
 import { AuthriteClient } from 'authrite-js'
 import { Ninja } from 'ninja-base'
 import { derivePaymentInfo } from './derivePaymentInfo'
-import { Config } from './types/types'
-
-// Extend the CreateActionParams type
-interface ExtendedCreateActionParams extends CreateActionParams {
-  topics?: string[]
-}
-
-interface PayParams {
-  config?: Config
-  description: string
-  orderID: string
-  recipientPublicKey: string
-  amount: number
-}
-
-interface PaymentResponse {
-  uploadURL: string
-  publicURL: string
-  status: string
-  description?: string
-  code?: string
-}
+import {
+  PayParams,
+  PaymentResponse,
+  ExtendedCreateActionParams
+} from '../types/pay'
+import { ErrorWithCode } from '../utils/errors' // Assuming ErrorWithCode is in utils/errors
 
 /**
  * High-level function to automatically pay an invoice, using a Babbage SDK
@@ -50,64 +34,80 @@ export async function pay(
 ): Promise<PaymentResponse> {
   // Input validation
   if (typeof amount !== 'number' || amount <= 0) {
-    throw new Error('Invalid amount')
+    throw new ErrorWithCode('Invalid amount', 'ERR_INVALID_AMOUNT')
   }
   if (typeof orderID !== 'string' || orderID.trim() === '') {
-    throw new Error('Invalid order ID')
+    throw new ErrorWithCode('Invalid order ID', 'ERR_INVALID_ORDER_ID')
   }
   if (
     typeof recipientPublicKey !== 'string' ||
     recipientPublicKey.trim() === ''
   ) {
-    throw new Error('Invalid recipient public key')
+    throw new ErrorWithCode(
+      'Invalid recipient public key',
+      'ERR_INVALID_PUBLIC_KEY'
+    )
   }
 
-  // Derive payment information
-  const paymentInfo = await derivePaymentInfo({
-    config,
-    recipientPublicKey,
-    amount
-  })
+  let paymentInfo
+  try {
+    // Derive payment information
+    paymentInfo = await derivePaymentInfo({
+      config,
+      recipientPublicKey,
+      amount
+    })
+  } catch (e) {
+    throw new ErrorWithCode(
+      `Failed to derive payment info: ${e}`,
+      'ERR_DERIVE_PAYMENT_INFO'
+    )
+  }
+
   let payment: unknown
-  if (config.clientPrivateKey) {
-    // Create a new transaction with Ninja which pays the output
-    const ninja = new Ninja({
-      privateKey: config.clientPrivateKey,
-      config: {
-        dojoURL: config.dojoURL ?? 'https://default-dojo-url.com'
-      }
-    })
-    payment = await ninja.getTransactionWithOutputs({
-      outputs: [paymentInfo.output],
-      note: 'Payment for file hosting'
-    })
-  } else {
-    payment = await createAction({
-      outputs: [paymentInfo.output],
-      description,
-      labels: ['nanostore'],
-      topics: ['UHRP']
-    } as ExtendedCreateActionParams)
-    if (
-      typeof payment === 'object' &&
-      payment !== null &&
-      'status' in payment
-    ) {
-      if (payment.status === 'error') {
+  try {
+    if (config.clientPrivateKey) {
+      // Create a new transaction with Ninja which pays the output
+      const ninja = new Ninja({
+        privateKey: config.clientPrivateKey,
+        config: {
+          dojoURL: config.dojoURL ?? 'https://default-dojo-url.com'
+        }
+      })
+      payment = await ninja.getTransactionWithOutputs({
+        outputs: [paymentInfo.output],
+        note: 'Payment for file hosting'
+      })
+    } else {
+      payment = await createAction({
+        outputs: [paymentInfo.output],
+        description,
+        labels: ['nanostore'],
+        topics: ['UHRP']
+      } as ExtendedCreateActionParams)
+
+      if (
+        typeof payment === 'object' &&
+        payment !== null &&
+        'status' in payment &&
+        (payment as Record<'status', unknown>).status === 'error'
+      ) {
         const errorPayment = payment as {
           status: string
           description?: string
           code?: string
         }
-        const e: Error & { code?: string } = new Error(
-          errorPayment.description || 'Unknown error'
+        throw new ErrorWithCode(
+          errorPayment.description || 'Unknown error',
+          errorPayment.code || 'ERR_PAYMENT_ACTION'
         )
-        if (errorPayment.code) {
-          e.code = errorPayment.code
-        }
-        throw e
       }
     }
+  } catch (e) {
+    throw new ErrorWithCode(
+      `Failed to create payment:${e}`,
+      'ERR_CREATE_PAYMENT'
+    )
   }
 
   // Initialize a new AuthriteClient with SDK or private key signing strategy depending on the config
@@ -118,28 +118,37 @@ export async function pay(
       : undefined
   )
 
-  // Make the pay request
-  const pay = await client.createSignedRequest('/pay', {
-    derivationPrefix: paymentInfo.derivationPrefix,
-    transaction: payment
-      ? {
-          ...payment,
-          outputs: [
-            {
-              vout: 0,
-              satoshis: amount,
-              derivationSuffix: paymentInfo.derivationSuffix
-            }
-          ]
-        }
-      : undefined,
-    orderID
-  })
+  try {
+    // Make the pay request
+    const pay = await client.createSignedRequest('/pay', {
+      derivationPrefix: paymentInfo.derivationPrefix,
+      transaction: payment
+        ? {
+            ...payment,
+            outputs: [
+              {
+                vout: 0,
+                satoshis: amount,
+                derivationSuffix: paymentInfo.derivationSuffix
+              }
+            ]
+          }
+        : undefined,
+      orderID
+    })
 
-  if (pay.status === 'error') {
-    const e: Error & { code?: string } = new Error(pay.description)
-    e.code = pay.code
-    throw e
+    if (pay.status === 'error') {
+      throw new ErrorWithCode(
+        pay.description || 'Unknown error',
+        pay.code || 'ERR_PAY_ERROR'
+      )
+    }
+
+    return pay as PaymentResponse
+  } catch (e) {
+    throw new ErrorWithCode(
+      `Failed to complete pay request:${e}`,
+      'ERR_PAY_REQUEST'
+    )
   }
-  return pay as PaymentResponse
 }

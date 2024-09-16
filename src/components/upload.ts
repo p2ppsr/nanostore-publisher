@@ -2,12 +2,18 @@ import axios from 'axios'
 import { getURLForFile } from 'uhrp-url'
 import { CONFIG } from './defaults'
 import { UploadParams, UploadResult } from '../types/types'
-import { NanoStorePublisherError } from '../utils/errors'
+import { Buffer } from 'buffer'
+import { NanoStorePublisherError, ErrorWithCode } from '../utils/errors'
 
-let FileReader: typeof globalThis.FileReader | undefined
+// Export axios so it can be mocked in tests
+export { axios }
 
+// Use FileReader either from the browser or require filereader for Node.js
+let FileReader: typeof globalThis.FileReader
 if (typeof window !== 'undefined' && window.FileReader) {
   FileReader = window.FileReader
+} else {
+  FileReader = require('filereader')
 }
 
 /**
@@ -16,13 +22,12 @@ if (typeof window !== 'undefined' && window.FileReader) {
  * @param {Object} [obj] All parameters are given in an object.
  * @param {String} [obj.uploadURL] The external URL where the file is uploaded to host it.
  * @param {String} [obj.publicURL] The public URL where the file can be downloaded from.
- * @param {File | object} [obj.file] The file to upload. This is usually obtained by querying for your HTML form's file upload `<input />` tag and referencing `tagElement.files[0]`. Or using custom object as defined in publishFile.js.
+ * @param {File | object} [obj.file] The file to upload.
  * @param {String} [obj.serverURL=https://nanostore.babbage.systems] The URL of the NanoStore server to contract with. By default, the Babbage NanoStore server is used.
  * @param {Function} [obj.onUploadProgress] A function called with periodic progress updates as the file uploads.
  *
  * @returns {Promise<Object>} The publication object. Fields are `published=true`, `hash` (the UHRP URL of the new file), and `publicURL`, the HTTP URL where the file is published.
  */
-
 export async function upload({
   config = CONFIG,
   uploadURL,
@@ -32,27 +37,19 @@ export async function upload({
   onUploadProgress = () => {}
 }: UploadParams): Promise<UploadResult> {
   try {
-    // Determine content type based on file type or fallback to 'application/octet-stream'
-    const contentType =
-      file instanceof Blob
-        ? file.type || 'application/octet-stream'
-        : 'application/octet-stream'
-
-    // Upload logic for the server (NanoStore)
+    // Handle local storage upload via localhost with multipart/form-data
     if (serverURL.startsWith('http://localhost')) {
+      const FormData = require('form-data')
       const formData = new FormData()
 
-      // Check if it's a File (which has the 'name' property) or a Blob
-      if (file instanceof File) {
-        formData.append('file', file, file.name) // Use file.name here
-      } else if (file instanceof Blob) {
-        formData.append('file', file, 'file') // Default name for Blob since Blob doesn't have 'name'
-      } else {
+      if (!(file instanceof Blob)) {
         throw new NanoStorePublisherError(
           'Unsupported file type for local storage upload',
           'ERR_INVALID_FILE_TYPE'
         )
       }
+
+      formData.append('file', file)
 
       const res = await axios.post(`${serverURL}/pay`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -66,27 +63,46 @@ export async function upload({
       }
     }
 
-    // Concurrently upload the file and generate its URL
+    // Handle external upload and concurrent hash generation
     const concurrentResult = await Promise.all([
-      axios.put(uploadURL, file, {
-        headers: {
-          'Content-Type': contentType // Dynamically set the Content-Type based on file type
-        },
-        onUploadProgress
-      }),
-      new Promise<string>((resolve, reject) => {
-        if (!FileReader) {
-          return reject(
-            new Error('FileReader is not available in this environment.')
-          )
+      // Upload file using PUT
+      axios.put(
+        uploadURL,
+        'dataAsBuffer' in file ? file.dataAsBuffer : file, // Supports Buffer and file uploading
+        {
+          headers: { 'Content-Type': file.type || 'application/octet-stream' },
+          onUploadProgress
         }
-
-        const fr = new FileReader()
-        fr.addEventListener('load', () => {
-          resolve(getURLForFile(Buffer.from(fr.result as ArrayBuffer)))
-        })
-        fr.addEventListener('error', err => reject(err))
-        fr.readAsArrayBuffer(file as Blob) // Safe cast to Blob
+      ),
+      new Promise<string>((resolve, reject) => {
+        try {
+          // Hash file based on environment
+          if ('dataAsBuffer' in file && file.dataAsBuffer) {
+            resolve(getURLForFile(file.dataAsBuffer))
+          } else if (file instanceof Blob) {
+            const fr = new FileReader()
+            fr.onload = () => {
+              resolve(getURLForFile(Buffer.from(fr.result as ArrayBuffer)))
+            }
+            fr.onerror = () =>
+              reject(
+                new ErrorWithCode(
+                  'Failed to read file for hashing',
+                  'ERR_INVALID_UHRP_URL'
+                )
+              )
+            fr.readAsArrayBuffer(file)
+          } else {
+            reject(
+              new ErrorWithCode(
+                'Unsupported file type for hashing',
+                'ERR_UNSUPPORTED_HASHING_FILETYPE'
+              )
+            )
+          }
+        } catch (err) {
+          reject(err)
+        }
       })
     ])
 
@@ -97,13 +113,8 @@ export async function upload({
       status: 'success'
     }
   } catch (error) {
+    // Log and throw custom error
     console.error('Upload failed:', error)
-
-    // Rethrow specific or generic NanoStorePublisherError
-    if (error instanceof NanoStorePublisherError) {
-      throw error
-    }
-
     throw new NanoStorePublisherError('File upload failed', 'ERR_UPLOAD_FAILED')
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { publishFile } from '../components/publishFile'
 import { invoice } from '../components/invoice'
 import { pay } from '../components/pay'
@@ -14,16 +15,16 @@ afterEach(() => {
   console.error = originalConsoleError
 })
 
-jest.mock('../invoice')
-jest.mock('../pay')
-jest.mock('../upload')
+jest.mock('../components/invoice')
+jest.mock('../components/pay')
+jest.mock('../components/upload')
 
 describe('publishFile function', () => {
-  const mockFile = {
-    size: 1024,
+  // Mock the file using the File constructor
+  const mockFile = new File([new ArrayBuffer(8)], 'test.txt', {
     type: 'text/plain',
-    arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(8))
-  }
+    lastModified: Date.now()
+  })
 
   const mockConfig = {
     ...CONFIG,
@@ -88,13 +89,13 @@ describe('publishFile function', () => {
   it('should throw an error if file is missing', async () => {
     await expect(
       publishFile({ config: mockConfig, retentionPeriod: 60 } as any)
-    ).rejects.toThrow('Choose a file to upload!')
+    ).rejects.toThrow('File is required for upload.')
   })
 
   it('should throw an error if retentionPeriod is missing', async () => {
     await expect(
       publishFile({ config: mockConfig, file: mockFile } as any)
-    ).rejects.toThrow('Specify how long to host the file!')
+    ).rejects.toThrow('Retention period must be specified.')
   })
 
   it('should use default CONFIG if no config is provided', async () => {
@@ -120,36 +121,39 @@ describe('publishFile function', () => {
     )
   })
 
-  it('should handle errors and return undefined', async () => {
+  it('should handle errors from the invoice function', async () => {
     (invoice as jest.Mock).mockRejectedValue(new Error('Invoice error'))
-    const result = await publishFile({
-      config: mockConfig,
-      file: mockFile,
-      retentionPeriod: 60
-    })
 
-    expect(result).toBeUndefined()
+    await expect(
+      publishFile({
+        config: mockConfig,
+        file: mockFile,
+        retentionPeriod: 60
+      })
+    ).rejects.toThrow('Failed to publish file: Invoice error')
   })
 
-  it('should handle errors from pay function', async () => {
+  it('should handle errors from the pay function', async () => {
     (pay as jest.Mock).mockRejectedValue(new Error('Payment error'))
-    const result = await publishFile({
-      config: mockConfig,
-      file: mockFile,
-      retentionPeriod: 60
-    })
 
-    expect(result).toBeUndefined()
+    await expect(
+      publishFile({
+        config: mockConfig,
+        file: mockFile,
+        retentionPeriod: 60
+      })
+    ).rejects.toThrow('Failed to publish file: Payment error')
   })
 
-  it('should handle errors from upload function', async () => {
+  it('should handle errors from the upload function', async () => {
     (upload as jest.Mock).mockRejectedValue(new Error('Upload error'))
-    const result = await publishFile({
-      config: mockConfig,
-      file: mockFile,
-      retentionPeriod: 60
-    })
 
-    expect(result).toBeUndefined()
+    await expect(
+      publishFile({
+        config: mockConfig,
+        file: mockFile,
+        retentionPeriod: 60
+      })
+    ).rejects.toThrow('Failed to publish file: Upload error')
   })
 })
