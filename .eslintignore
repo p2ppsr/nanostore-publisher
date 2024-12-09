@@ -1,9 +1,0 @@
-dist/
-node_modules/
-*.js
-webpack.*.js
-*.js.map
-.vscode/
-coverage/
-.eslintrc
-.eslintignore
