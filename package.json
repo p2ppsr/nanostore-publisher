@@ -38,15 +38,15 @@
   },
   "homepage": "https://github.com/p2ppsr/nanostore-publisher#readme",
   "dependencies": {
-    "@babbage/sdk-ts": "^0.2.47",
-    "authrite-js": "^0.4.34",
+    "@babbage/sdk-ts": "^0.2.66",
+    "authrite-js": "^0.4.36",
     "axios": "^0.21.4",
     "babbage-bsv": "^0.2.5",
     "encoding": "^0.1.13",
     "filereader": "^0.10.3",
     "form-data": "^4.0.0",
     "jsdom": "^25.0.0",
-    "ninja-base": "^0.3.44",
+    "ninja-base": "^0.3.67",
     "prettier": "^3.3.3",
     "uhrp-url": "^0.1.10"
   },

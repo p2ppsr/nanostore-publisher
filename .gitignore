@@ -1,2 +1,11 @@
 node_modules
 .env
+dist
+.vscode
+.eslintignore
+.eslintrc.json
+.gitignore
+jest.config.js
+jest.setup.js
+tsconfig.json
+webpack*

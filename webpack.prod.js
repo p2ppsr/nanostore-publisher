@@ -43,9 +43,6 @@ module.exports = {
     new webpack.ProvidePlugin({
       process: 'process/browser',
       Buffer: ['buffer', 'Buffer']
-    }),
-    new webpack.NormalModuleReplacementPlugin(/^fs$/, (resource) => {
-      resource.request = path.resolve(__dirname, 'src/fs-mock.js');
     })
   ],
   optimization: {
