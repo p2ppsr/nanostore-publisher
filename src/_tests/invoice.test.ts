@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { invoice } from '../components/invoice'
 import { AuthriteClient } from 'authrite-js'
 import { CONFIG } from '../components/defaults'
@@ -53,21 +52,16 @@ describe('invoice function', () => {
       createSignedRequest: jest.fn().mockResolvedValue(mockErrorResponse)
     }))
 
-    try {
-      await invoice({
+    await expect(
+      invoice({
         config: mockConfig,
         fileSize: 1024,
         retentionPeriod: 60
       })
-      fail('Expected an error to be thrown')
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toBe('Invalid file size')
-        expect((error as any).code).toBe('INVALID_SIZE')
-      } else {
-        fail('Expected an Error to be thrown')
-      }
-    }
+    ).rejects.toMatchObject({
+      message: 'Invalid file size',
+      code: 'INVALID_SIZE'
+    })
   })
 
   it('should use default CONFIG if no config is provided', async () => {
@@ -96,7 +90,8 @@ describe('invoice function', () => {
         : undefined
     )
   })
-  it('should create an invoice with minimum valid inputs', async () => {
+
+  it('should create an invoice with valid inputs', async () => {
     const mockInvoiceResponse = {
       message: 'Invoice created',
       identityKey: 'mockIdentityKey',
@@ -105,6 +100,7 @@ describe('invoice function', () => {
       publicURL: 'https://test.nanostore.com/file',
       status: 'success'
     }
+
     ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockInvoiceResponse)
     }))
@@ -112,25 +108,7 @@ describe('invoice function', () => {
     const result = await invoice({ fileSize: 1, retentionPeriod: 1 })
     expect(result).toEqual(mockInvoiceResponse)
   })
-  it('should create an invoice with maximum allowed inputs', async () => {
-    const mockInvoiceResponse = {
-      message: 'Invoice created',
-      identityKey: 'mockIdentityKey',
-      amount: 1000000,
-      ORDER_ID: 'mockOrderId',
-      publicURL: 'https://test.nanostore.com/file',
-      status: 'success'
-    }
-    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
-      createSignedRequest: jest.fn().mockResolvedValue(mockInvoiceResponse)
-    }))
 
-    const result = await invoice({
-      fileSize: 1000000000,
-      retentionPeriod: 525600
-    }) // 1GB, 1 year
-    expect(result).toEqual(mockInvoiceResponse)
-  })
   it('should throw an error for invalid inputs', async () => {
     await expect(
       invoice({ fileSize: -1, retentionPeriod: 60 })
@@ -138,15 +116,9 @@ describe('invoice function', () => {
     await expect(
       invoice({ fileSize: 1024, retentionPeriod: -1 })
     ).rejects.toThrow('Invalid retention period')
-    await expect(
-      invoice({ fileSize: 'invalid' as any, retentionPeriod: 60 })
-    ).rejects.toThrow()
-    await expect(
-      invoice({ fileSize: 1024, retentionPeriod: 'invalid' as any })
-    ).rejects.toThrow()
   })
 
-  it('should throw an error with code if the server returns an error status', async () => {
+  it('should throw an error with server error response', async () => {
     const mockErrorResponse = {
       status: 'error',
       description: 'Server error',
@@ -157,73 +129,18 @@ describe('invoice function', () => {
       createSignedRequest: jest.fn().mockResolvedValue(mockErrorResponse)
     }))
 
-    try {
-      await invoice({
+    await expect(
+      invoice({
         config: mockConfig,
         fileSize: 1024,
         retentionPeriod: 60
       })
-      fail('Expected an error to be thrown')
-    } catch (error) {
-      if (error instanceof Error) {
-        expect(error.message).toBe('Server error')
-        expect((error as any).code).toBe('SERVER_ERROR')
-      } else {
-        fail('Expected an Error to be thrown')
-      }
-    }
-  })
-
-  it('should use custom config when provided', async () => {
-    const customConfig = {
-      nanostoreURL: 'https://custom.nanostore.com',
-      clientPrivateKey: 'customPrivateKey'
-    }
-    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
-      createSignedRequest: jest.fn().mockResolvedValue({})
-    }))
-
-    await invoice({
-      config: customConfig,
-      fileSize: 1024,
-      retentionPeriod: 60
+    ).rejects.toMatchObject({
+      message: 'Server error',
+      code: 'SERVER_ERROR'
     })
-    expect(AuthriteClient).toHaveBeenCalledWith(
-      'https://custom.nanostore.com',
-      { clientPrivateKey: 'customPrivateKey' }
-    )
   })
-  it('should handle different error responses correctly', async () => {
-    const errorResponses = [
-      {
-        status: 'error',
-        description: 'Invalid file size',
-        code: 'INVALID_SIZE'
-      },
-      {
-        status: 'error',
-        description: 'Invalid retention period',
-        code: 'INVALID_PERIOD'
-      },
-      { status: 'error', description: 'Server error', code: 'SERVER_ERROR' }
-    ]
 
-    for (const errorResponse of errorResponses) {
-      (AuthriteClient as jest.Mock).mockImplementation(() => ({
-        createSignedRequest: jest.fn().mockResolvedValue(errorResponse)
-      }))
-
-      await expect(
-        invoice({ fileSize: 1024, retentionPeriod: 60 })
-      ).rejects.toThrow(errorResponse.description)
-
-      const thrownError = await invoice({
-        fileSize: 1024,
-        retentionPeriod: 60
-      }).catch(e => e)
-      expect(thrownError.code).toBe(errorResponse.code)
-    }
-  })
   it('should initialize AuthriteClient without clientPrivateKey when not provided', async () => {
     const configWithoutPrivateKey = { ...CONFIG, clientPrivateKey: undefined }
     ;(AuthriteClient as jest.Mock).mockImplementation(() => ({

@@ -3,8 +3,6 @@ import { getPublicKey } from '@babbage/sdk-ts'
 import { invoice3241645161d8 } from 'ninja-base'
 import { CONFIG } from '../components/defaults'
 import crypto from 'crypto'
-
-// Import the mocked modules after mocking
 import { getPaymentAddress } from 'sendover'
 import * as bsv from 'babbage-bsv'
 
@@ -139,8 +137,8 @@ describe('derivePaymentInfo function', () => {
         amount: mockAmount
       })
     ).rejects.toMatchObject({
-      code: 'ERR_DERIVE_PUBLIC_KEY', // Testing the error code
-      message: 'Failed to derive public key' // Optional: test the message as well if necessary
+      code: 'ERR_DERIVE_PUBLIC_KEY',
+      message: expect.stringContaining('Mock getPaymentAddress error')
     })
   })
 
@@ -155,8 +153,8 @@ describe('derivePaymentInfo function', () => {
         amount: mockAmount
       })
     ).rejects.toMatchObject({
-      code: 'ERR_DERIVE_PUBLIC_KEY', // Testing the error code
-      message: 'Failed to derive public key' // Optional: test the message as well
+      code: 'ERR_DERIVE_PUBLIC_KEY',
+      message: expect.stringContaining('Mock getPublicKey error')
     })
   })
 

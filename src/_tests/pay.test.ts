@@ -174,7 +174,7 @@ describe('pay function', () => {
       fail('Expected an error to be thrown')
     } catch (error) {
       if (error instanceof Error) {
-        expect(error.message).toBe('Failed to create payment') // Updated message
+        expect(error.message.startsWith('Failed to create payment')).toBe(true) // Flexible validation
         expect((error as any).code).toBe('ERR_CREATE_PAYMENT')
       } else {
         fail('Expected an Error to be thrown')

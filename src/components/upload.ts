@@ -19,14 +19,15 @@ if (typeof window !== 'undefined' && window.FileReader) {
 /**
  * Uploads a file to NanoStore and pays an invoice, thereby starting the file hosting contract.
  *
- * @param {Object} [obj] All parameters are given in an object.
- * @param {String} [obj.uploadURL] The external URL where the file is uploaded to host it.
- * @param {String} [obj.publicURL] The public URL where the file can be downloaded from.
- * @param {File | object} [obj.file] The file to upload.
- * @param {String} [obj.serverURL=https://nanostore.babbage.systems] The URL of the NanoStore server to contract with. By default, the Babbage NanoStore server is used.
- * @param {Function} [obj.onUploadProgress] A function called with periodic progress updates as the file uploads.
+ * @param {Object} obj - All parameters are given in an object.
+ * @param {string} obj.uploadURL - The external URL where the file is uploaded to host it.
+ * @param {string} obj.publicURL - The public URL where the file can be downloaded from.
+ * @param {File | { dataAsBuffer: Buffer }} obj.file - The file to upload.
+ * @param {string} [obj.serverURL] - The URL of the NanoStore server to contract with. Defaults to `config.nanostoreURL`.
+ * @param {Function} [obj.onUploadProgress] - A function called with periodic progress updates as the file uploads.
  *
- * @returns {Promise<Object>} The publication object. Fields are `published=true`, `hash` (the UHRP URL of the new file), and `publicURL`, the HTTP URL where the file is published.
+ * @returns {Promise<UploadResult>} The publication object containing `published=true`, `hash` (the UHRP URL of the new file), and `publicURL`.
+ * @throws {NanoStorePublisherError} If upload or hashing fails.
  */
 export async function upload({
   config = CONFIG,
@@ -36,19 +37,24 @@ export async function upload({
   serverURL = `${config.nanostoreURL}`,
   onUploadProgress = () => {}
 }: UploadParams): Promise<UploadResult> {
+  if (!uploadURL || !publicURL) {
+    throw new NanoStorePublisherError(
+      'Missing required parameters for upload',
+      'ERR_MISSING_PARAMS'
+    )
+  }
+  if (!(file instanceof Blob)) {
+    throw new NanoStorePublisherError(
+      'Unsupported file type for local storage upload',
+      'ERR_INVALID_FILE_TYPE'
+    )
+  }
+
   try {
     // Handle local storage upload via localhost with multipart/form-data
     if (serverURL.startsWith('http://localhost')) {
       const FormData = require('form-data')
       const formData = new FormData()
-
-      if (!(file instanceof Blob)) {
-        throw new NanoStorePublisherError(
-          'Unsupported file type for local storage upload',
-          'ERR_INVALID_FILE_TYPE'
-        )
-      }
-
       formData.append('file', file)
 
       const res = await axios.post(`${serverURL}/pay`, formData, {

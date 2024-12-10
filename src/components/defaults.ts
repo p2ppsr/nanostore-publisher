@@ -1,5 +1,6 @@
 import { Config } from '../types/types'
 
 export const CONFIG: Readonly<Config> = Object.freeze({
-  nanostoreURL: 'https://nanostore.babbage.systems'
+  nanostoreURL: 'https://nanostore.babbage.systems',
+  clientPrivateKey: undefined
 })

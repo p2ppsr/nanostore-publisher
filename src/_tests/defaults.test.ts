@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CONFIG } from '../components/defaults'
 import { Config } from '../types/types'
 
@@ -19,20 +18,22 @@ describe('defaults', () => {
     expect(typeof CONFIG.nanostoreURL).toBe('string')
     expect(CONFIG.nanostoreURL).toBe('https://nanostore.babbage.systems')
 
-    // Optional: Check if it's a valid URL
+    // Check if it's a valid URL
     expect(() => new URL(CONFIG.nanostoreURL)).not.toThrow()
   })
 
   it('should not have any additional properties', () => {
     const configKeys = Object.keys(CONFIG)
-    expect(configKeys).toHaveLength(1)
-    expect(configKeys).toEqual(['nanostoreURL'])
+    expect(configKeys).toHaveLength(2)
+    expect(configKeys).toEqual(['nanostoreURL', 'clientPrivateKey'])
   })
 
-  // Optional: If you want to ensure the object is read-only
   it('should be a read-only object', () => {
+    expect(Object.isFrozen(CONFIG)).toBe(true)
+
+    // Ensure attempting modification throws an error
     expect(() => {
-      (CONFIG as any).nanostoreURL = 'https://example.com'
+      ;(CONFIG as any).nanostoreURL = 'https://example.com'
     }).toThrow(TypeError)
   })
 })

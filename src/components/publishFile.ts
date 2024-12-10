@@ -6,18 +6,56 @@ import { UploadResult } from '../types/types'
 import { PublishFileParams } from '../types/publishFile'
 import { NanoStorePublisherError, ErrorWithCode } from '../utils/errors'
 
+const DEFAULT_UPLOAD_DESCRIPTION = 'Upload with NanoStore UI'
+
 /**
- * High-level function to automatically pay an invoice, using a Babbage SDK
- * `createAction` call, or a clientPrivateKey when in a server environment.
+ * Validates the configuration object.
  *
+ * @param {object} config - The configuration object to validate.
+ * @param {string} config.nanostoreURL - The URL of the NanoStore.
+ * @param {string} [config.clientPrivateKey] - The private key used for client authentication (optional).
+ * @throws {ErrorWithCode} If the configuration is invalid.
+ */
+const validateConfig = (config: typeof CONFIG): void => {
+  if (!config.nanostoreURL || typeof config.nanostoreURL !== 'string') {
+    throw new ErrorWithCode(
+      'Invalid NanoStore URL in config',
+      'ERR_INVALID_CONFIG'
+    )
+  }
+}
+
+/**
+ * Validates the file object.
+ *
+ * @param {File} file - The file to validate.
+ * @param {number} file.size - The size of the file in bytes.
+ * @throws {NanoStorePublisherError} If the file is invalid or its size is less than or equal to 0.
+ */
+const validateFile = (file: File): void => {
+  if (!file || typeof file.size !== 'number' || file.size <= 0) {
+    throw new NanoStorePublisherError(
+      'Invalid file: size must be greater than 0.',
+      'ERR_INVALID_FILE_SIZE'
+    )
+  }
+}
+
+/**
+ * Publishes a file to the NanoStore by creating an invoice, making a payment,
+ * and uploading the file.
+ *
+ * @async
  * @public
- * @param obj All parameters are given in an object.
- * @param obj.config config object, see config section.
- * @param obj.file - the File to upload given as File or custom object with the necessary data params (see above spec)
- * @param obj.retentionPeriod - how long the file should be retained
- * @param obj.progressTracker - function to provide updates on upload progress
- *
- * @returns The upload object, contains the `hash` and the `publicURL` and the `status`.
+ * @param {object} obj - The parameters for the function.
+ * @param {object} obj.config - The configuration object.
+ * @param {string} obj.config.nanostoreURL - The URL of the NanoStore.
+ * @param {string} [obj.config.clientPrivateKey] - The private key used for client authentication (optional).
+ * @param {File} obj.file - The file to be uploaded.
+ * @param {number} obj.retentionPeriod - The number of minutes the file should be retained.
+ * @param {function} [obj.progressTracker] - A callback function to track upload progress (optional).
+ * @returns {Promise<UploadResult>} The upload result object containing the file hash, public URL, and status.
+ * @throws {NanoStorePublisherError|ErrorWithCode} If validation or any step of the process fails.
  */
 export async function publishFile(
   {
@@ -26,19 +64,23 @@ export async function publishFile(
     retentionPeriod,
     progressTracker = () => {}
   }: PublishFileParams = {} as PublishFileParams
-): Promise<UploadResult | undefined> {
+): Promise<UploadResult> {
   try {
-    // Validate required params
-    if (!file) {
+    // Validate inputs
+    validateConfig(config)
+    validateFile(file)
+
+    if (typeof progressTracker !== 'function') {
       throw new NanoStorePublisherError(
-        'File is required for upload.',
-        'ERR_UI_FILE_MISSING'
+        'Progress tracker must be a function.',
+        'ERR_INVALID_PROGRESS_TRACKER'
       )
     }
-    if (!retentionPeriod) {
+
+    if (!retentionPeriod || retentionPeriod <= 0) {
       throw new NanoStorePublisherError(
-        'Retention period must be specified.',
-        'ERR_UI_HOST_DURATION_MISSING'
+        'Retention period must be specified and greater than 0.',
+        'ERR_INVALID_RETENTION_PERIOD'
       )
     }
 
@@ -52,7 +94,7 @@ export async function publishFile(
     // Make a payment
     const payResult = await pay({
       config,
-      description: 'Upload with NanoStore UI',
+      description: DEFAULT_UPLOAD_DESCRIPTION,
       orderID: invoiceResult.ORDER_ID,
       recipientPublicKey: invoiceResult.identityKey,
       amount: invoiceResult.amount
@@ -70,7 +112,6 @@ export async function publishFile(
       onUploadProgress: progressTracker
     })
 
-    // Add status to the upload result
     return { ...uploadResult, status: 'success' }
   } catch (e: unknown) {
     if (
@@ -81,14 +122,12 @@ export async function publishFile(
       throw e
     }
 
-    // Wrap any other error in ErrorWithCode for consistent handling
     if (e instanceof Error) {
       throw new ErrorWithCode(
-        `Failed to publish file: ${e.message}`,
+        `Failed to publish file "${file?.name || 'unknown'}": ${e.message}`,
         'ERR_PUBLISH_FILE_FAILED'
       )
     } else {
-      // Handle unknown errors that may not be instances of Error
       throw new ErrorWithCode(
         'An unknown error occurred while publishing the file',
         'ERR_PUBLISH_FILE_FAILED'

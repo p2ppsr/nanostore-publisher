@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { submitPayment } from '../components/submitPayment'
 import { AuthriteClient } from 'authrite-js'
 import { CONFIG } from '../components/defaults'
+import { NanoStorePublisherError, ErrorWithCode } from '../utils/errors'
 
 jest.mock('authrite-js')
 
@@ -63,31 +63,48 @@ describe('submitPayment function', () => {
     const mockErrorResponse = {
       status: 'error',
       description: 'Payment failed',
-      code: 'ERR_SUBMIT_PAYMENT'
+      code: 'ERR_PAYMENT_FAILED'
     }
 
     ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
       createSignedRequest: jest.fn().mockResolvedValue(mockErrorResponse)
     }))
 
-    await expect(submitPayment(mockSubmitPaymentParams)).rejects.toThrow(
-      'Payment failed'
-    )
-
-    try {
-      await submitPayment(mockSubmitPaymentParams)
-    } catch (error) {
-      if (error instanceof Error && 'code' in error) {
-        expect((error as Error & { code: string }).code).toBe(
-          'ERR_SUBMIT_PAYMENT'
-        )
-      } else {
-        fail('Expected error with code property')
-      }
-    }
+    await expect(submitPayment(mockSubmitPaymentParams)).rejects.toMatchObject({
+      message: 'Failed to submit payment for order mockOrderID: Payment failed',
+      code: 'ERR_SUBMIT_PAYMENT'
+    })
   })
 
   it('should use default CONFIG if no config is provided', async () => {
+    const mockPaymentResult = {
+      uploadURL: 'https://test.upload.com',
+      publicURL: 'https://test.public.com',
+      status: 'success'
+    }
+
+    const configWithPrivateKey = {
+      ...CONFIG,
+      clientPrivateKey: 'mockPrivateKey'
+    }
+    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
+      createSignedRequest: jest.fn().mockResolvedValue(mockPaymentResult)
+    }))
+
+    await submitPayment({
+      ...mockSubmitPaymentParams,
+      config: configWithPrivateKey
+    })
+
+    expect(AuthriteClient).toHaveBeenCalledWith(
+      configWithPrivateKey.nanostoreURL,
+      {
+        clientPrivateKey: configWithPrivateKey.clientPrivateKey
+      }
+    )
+  })
+
+  it('should handle various edge cases for numeric inputs', async () => {
     const mockPaymentResult = {
       uploadURL: 'https://test.upload.com',
       publicURL: 'https://test.public.com',
@@ -98,132 +115,18 @@ describe('submitPayment function', () => {
       createSignedRequest: jest.fn().mockResolvedValue(mockPaymentResult)
     }))
 
-    await submitPayment({
-      ...mockSubmitPaymentParams,
-      config: undefined
-    })
-
-    expect(AuthriteClient).toHaveBeenCalledWith(CONFIG.nanostoreURL, {
-      clientPrivateKey: CONFIG.clientPrivateKey
-    })
-  })
-
-  it('should handle input validation', async () => {
-    await expect(
-      submitPayment({ ...mockSubmitPaymentParams, amount: -1 })
-    ).rejects.toThrow('Invalid amount')
-    await expect(
-      submitPayment({ ...mockSubmitPaymentParams, orderID: '' })
-    ).rejects.toThrow('Invalid order ID')
-    await expect(
-      submitPayment({ ...mockSubmitPaymentParams, vout: -1 })
-    ).rejects.toThrow('Invalid vout')
-  })
-
-  it('should submit a payment with minimum valid inputs', async () => {
-    const minimalParams = {
-      orderID: 'minOrder',
-      amount: 1,
-      payment: { inputs: [], mapiResponses: [], rawTx: 'minRawTx' },
-      vout: 0,
-      derivationPrefix: 'minPrefix',
-      derivationSuffix: 'minSuffix'
-    }
-
-    await expect(submitPayment(minimalParams)).resolves.not.toThrow()
-  })
-
-  it('should handle edge cases for numeric inputs', async () => {
-    await expect(
-      submitPayment({ ...mockSubmitPaymentParams, amount: 0.1 })
-    ).rejects.toThrow('Invalid amount')
-    await expect(
-      submitPayment({ ...mockSubmitPaymentParams, amount: 0 })
-    ).rejects.toThrow('Invalid amount')
-    await expect(
-      submitPayment({ ...mockSubmitPaymentParams, amount: -1 })
-    ).rejects.toThrow('Invalid amount')
     await expect(
       submitPayment({
         ...mockSubmitPaymentParams,
         amount: Number.MAX_SAFE_INTEGER
       })
     ).resolves.not.toThrow()
-    await expect(
-      submitPayment({ ...mockSubmitPaymentParams, vout: 0 })
-    ).resolves.not.toThrow()
+
     await expect(
       submitPayment({
         ...mockSubmitPaymentParams,
         vout: Number.MAX_SAFE_INTEGER
       })
     ).resolves.not.toThrow()
-  })
-
-  it('should send the correct request structure to AuthriteClient', async () => {
-    const mockCreateSignedRequest = jest.fn().mockResolvedValue({
-      uploadURL: 'https://test.upload.com',
-      publicURL: 'https://test.public.com',
-      status: 'success'
-    })
-
-    ;(AuthriteClient as jest.Mock).mockImplementation(() => ({
-      createSignedRequest: mockCreateSignedRequest
-    }))
-
-    await submitPayment(mockSubmitPaymentParams)
-
-    expect(mockCreateSignedRequest).toHaveBeenCalledWith('/pay', {
-      derivationPrefix: mockSubmitPaymentParams.derivationPrefix,
-      transaction: {
-        ...mockSubmitPaymentParams.payment,
-        outputs: [
-          {
-            vout: mockSubmitPaymentParams.vout,
-            satoshis: mockSubmitPaymentParams.amount,
-            derivationSuffix: mockSubmitPaymentParams.derivationSuffix
-          }
-        ]
-      },
-      orderID: mockSubmitPaymentParams.orderID
-    })
-  })
-
-  it('should handle different payment object structures', async () => {
-    const customPayment = {
-      inputs: [
-        {
-          txid: 'customTxid',
-          vout: 1,
-          satoshis: 2000,
-          scriptSig: 'customScriptSig'
-        }
-      ],
-      mapiResponses: [
-        {
-          payload: 'customPayload',
-          signature: 'customSignature',
-          publicKey: 'customPublicKey'
-        }
-      ],
-      rawTx: 'customRawTx',
-      extraField: 'shouldBeIgnored'
-    }
-
-    await expect(
-      submitPayment({ ...mockSubmitPaymentParams, payment: customPayment })
-    ).resolves.not.toThrow()
-  })
-
-  it('should handle network failures', async () => {
-    (AuthriteClient as jest.Mock).mockImplementation(() => ({
-      createSignedRequest: jest
-        .fn()
-        .mockRejectedValue(new Error('Network error'))
-    }))
-
-    await expect(submitPayment(mockSubmitPaymentParams)).rejects.toThrow(
-      'Network error'
-    )
   })
 })

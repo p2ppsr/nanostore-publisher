@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { publishFile } from '../components/publishFile'
 import { invoice } from '../components/invoice'
 import { pay } from '../components/pay'
 import { upload } from '../components/upload'
 import { CONFIG } from '../components/defaults'
+import { NanoStorePublisherError } from '../utils/errors'
 
 const originalConsoleError = console.error
 
@@ -20,7 +20,6 @@ jest.mock('../components/pay')
 jest.mock('../components/upload')
 
 describe('publishFile function', () => {
-  // Mock the file using the File constructor
   const mockFile = new File([new ArrayBuffer(8)], 'test.txt', {
     type: 'text/plain',
     lastModified: Date.now()
@@ -89,13 +88,13 @@ describe('publishFile function', () => {
   it('should throw an error if file is missing', async () => {
     await expect(
       publishFile({ config: mockConfig, retentionPeriod: 60 } as any)
-    ).rejects.toThrow('File is required for upload.')
+    ).rejects.toThrow('Invalid file: size must be greater than 0.')
   })
 
   it('should throw an error if retentionPeriod is missing', async () => {
     await expect(
       publishFile({ config: mockConfig, file: mockFile } as any)
-    ).rejects.toThrow('Retention period must be specified.')
+    ).rejects.toThrow('Retention period must be specified and greater than 0.')
   })
 
   it('should use default CONFIG if no config is provided', async () => {
@@ -122,7 +121,9 @@ describe('publishFile function', () => {
   })
 
   it('should handle errors from the invoice function', async () => {
-    (invoice as jest.Mock).mockRejectedValue(new Error('Invoice error'))
+    (invoice as jest.Mock).mockRejectedValue(
+      new NanoStorePublisherError('Invoice error', 'ERR_INVOICE_ERROR')
+    )
 
     await expect(
       publishFile({
@@ -130,11 +131,16 @@ describe('publishFile function', () => {
         file: mockFile,
         retentionPeriod: 60
       })
-    ).rejects.toThrow('Failed to publish file: Invoice error')
+    ).rejects.toMatchObject({
+      code: 'ERR_PUBLISH_FILE_FAILED',
+      message: 'Failed to publish file "test.txt": Invoice error'
+    })
   })
 
   it('should handle errors from the pay function', async () => {
-    (pay as jest.Mock).mockRejectedValue(new Error('Payment error'))
+    (pay as jest.Mock).mockRejectedValue(
+      new NanoStorePublisherError('Payment error', 'ERR_PAY_ERROR')
+    )
 
     await expect(
       publishFile({
@@ -142,11 +148,16 @@ describe('publishFile function', () => {
         file: mockFile,
         retentionPeriod: 60
       })
-    ).rejects.toThrow('Failed to publish file: Payment error')
+    ).rejects.toMatchObject({
+      code: 'ERR_PUBLISH_FILE_FAILED',
+      message: 'Failed to publish file "test.txt": Payment error'
+    })
   })
 
   it('should handle errors from the upload function', async () => {
-    (upload as jest.Mock).mockRejectedValue(new Error('Upload error'))
+    (upload as jest.Mock).mockRejectedValue(
+      new NanoStorePublisherError('Upload error', 'ERR_UPLOAD_ERROR')
+    )
 
     await expect(
       publishFile({
@@ -154,6 +165,9 @@ describe('publishFile function', () => {
         file: mockFile,
         retentionPeriod: 60
       })
-    ).rejects.toThrow('Failed to publish file: Upload error')
+    ).rejects.toMatchObject({
+      code: 'ERR_PUBLISH_FILE_FAILED',
+      message: 'Failed to publish file "test.txt": Upload error'
+    })
   })
 })

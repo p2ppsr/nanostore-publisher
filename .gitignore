@@ -1,10 +1,10 @@
 node_modules
+coverage
 .env
 dist
 .vscode
 .eslintignore
 .eslintrc.json
-.gitignore
 jest.config.js
 jest.setup.js
 tsconfig.json

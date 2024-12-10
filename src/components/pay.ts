@@ -11,6 +11,22 @@ import {
 import { ErrorWithCode } from '../utils/errors' // Assuming ErrorWithCode is in utils/errors
 
 /**
+ * Validates the response status and throws an appropriate error if the status is 'error'.
+ *
+ * @param response The response object to validate.
+ * @param defaultCode The default error code to use if none is provided in the response.
+ * @throws {ErrorWithCode} If the response status is 'error'.
+ */
+function validateResponseStatus(response: any, defaultCode: string): void {
+  if (response.status === 'error') {
+    throw new ErrorWithCode(
+      response.description || 'Unknown error',
+      response.code || defaultCode
+    )
+  }
+}
+
+/**
  * High-level function to automatically pay an invoice, using a Babbage SDK
  * `createAction` call.
  *
@@ -86,22 +102,8 @@ export async function pay(
         topics: ['UHRP']
       } as ExtendedCreateActionParams)
 
-      if (
-        typeof payment === 'object' &&
-        payment !== null &&
-        'status' in payment &&
-        (payment as Record<'status', unknown>).status === 'error'
-      ) {
-        const errorPayment = payment as {
-          status: string
-          description?: string
-          code?: string
-        }
-        throw new ErrorWithCode(
-          errorPayment.description || 'Unknown error',
-          errorPayment.code || 'ERR_PAYMENT_ACTION'
-        )
-      }
+      // Validate the response
+      validateResponseStatus(payment, 'ERR_PAYMENT_ACTION')
     }
   } catch (e) {
     throw new ErrorWithCode(
@@ -137,12 +139,8 @@ export async function pay(
       orderID
     })
 
-    if (pay.status === 'error') {
-      throw new ErrorWithCode(
-        pay.description || 'Unknown error',
-        pay.code || 'ERR_PAY_ERROR'
-      )
-    }
+    // Validate the response
+    validateResponseStatus(pay, 'ERR_PAY_ERROR')
 
     return pay as PaymentResponse
   } catch (e) {
