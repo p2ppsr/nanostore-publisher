@@ -1,5 +1,5 @@
 import * as bsv from 'babbage-bsv'
-import { getPublicKey } from '@babbage/sdk-ts'
+import { getPublicKey, sdk } from '@babbage/sdk-ts'
 import { CONFIG } from './defaults'
 import { getPaymentAddress } from 'sendover'
 import { invoice3241645161d8 } from 'ninja-base'
@@ -9,14 +9,16 @@ import { DerivePaymentInfoParams } from '../types/derivePaymentInfo'
 import { ErrorWithCode } from '../utils/errors'
 
 /**
- * Derives prefixes and suffixes for payment key derivation.
+ * Generates prefixes and suffixes for payment key derivation.
  *
- * @returns {Object} An object containing the derivation prefix and suffix.
+ * @returns {{ prefix: sdk.Base64String, suffix: sdk.Base64String }} An object containing:
+ * - `prefix` - A randomly generated prefix in base64 format.
+ * - `suffix` - A randomly generated suffix in base64 format.
  * @throws {ErrorWithCode} If random bytes generation fails.
  */
 const generateDerivationPrefixSuffix = (): {
-  prefix: string
-  suffix: string
+  prefix: sdk.Base64String
+  suffix: sdk.Base64String
 } => {
   try {
     return {
@@ -34,19 +36,22 @@ const generateDerivationPrefixSuffix = (): {
 /**
  * Derives the public key used for payment.
  *
- * @param recipientPublicKey The recipient's public key.
- * @param derivationPrefix The derivation prefix.
- * @param derivationSuffix The derivation suffix.
- * @param config The configuration object.
- * @returns {string} The derived public key.
+ * @param {sdk.PubKeyHex} recipientPublicKey - The recipient's public key.
+ * @param {sdk.Base64String} derivationPrefix - The derivation prefix.
+ * @param {sdk.Base64String} derivationSuffix - The derivation suffix.
+ * @param {typeof CONFIG} config - The configuration object containing:
+ * - `nanostoreURL` - URL of the NanoStore service.
+ * - `clientPrivateKey` - The client's private key in hexadecimal format (optional).
+ * - `dojoURL` - URL for the Dojo server (optional).
+ * @returns {Promise<sdk.PubKeyHex>} The derived public key.
  * @throws {ErrorWithCode} If public key derivation fails.
  */
 const derivePublicKey = async (
-  recipientPublicKey: string,
-  derivationPrefix: string,
-  derivationSuffix: string,
+  recipientPublicKey: sdk.PubKeyHex,
+  derivationPrefix: sdk.Base64String,
+  derivationSuffix: sdk.Base64String,
   config: typeof CONFIG
-): Promise<string> => {
+): Promise<sdk.PubKeyHex> => {
   try {
     if (config.clientPrivateKey) {
       return getPaymentAddress({
@@ -73,11 +78,11 @@ const derivePublicKey = async (
 /**
  * Creates a locking script for the derived public key.
  *
- * @param derivedPublicKey The derived public key.
+ * @param {sdk.PubKeyHex} derivedPublicKey - The derived public key.
  * @returns {string} The locking script in hexadecimal format.
  * @throws {ErrorWithCode} If the script creation fails.
  */
-const createOutputScript = (derivedPublicKey: string): string => {
+const createOutputScript = (derivedPublicKey: sdk.PubKeyHex): string => {
   try {
     return new bsv.Script(
       bsv.Script.fromAddress(
@@ -93,12 +98,24 @@ const createOutputScript = (derivedPublicKey: string): string => {
 }
 
 /**
- * Derives an output to pay for the NanoStore file hosting contract.
+ * Derives an output to pay for the NanoStore file hosting contract. After
+ * payment, use `submitPayment` to complete the payment process and get an
+ * upload URL.
  *
- * @param obj All parameters are given in an object.
- * @param obj.recipientPublicKey Public key of the host receiving the payment.
- * @param obj.amount The number of satoshis being paid.
- * @returns {PaymentInfo} The output object with the derived script and metadata.
+ * @param {DerivePaymentInfoParams} obj - Parameters for payment info derivation:
+ * - `config` - Configuration object (optional).
+ * - `recipientPublicKey` - Public key of the host receiving the payment.
+ * - `amount` - The number of satoshis being paid.
+ * @returns {Promise<PaymentInfo>} The output object containing:
+ * - `derivationPrefix` - Prefix used for key derivation.
+ * - `derivationSuffix` - Suffix used for key derivation.
+ * - `derivedPublicKey` - The derived public key.
+ * - `output` - The output details:
+ *   - `script` - The locking script in hexadecimal format.
+ *   - `satoshis` - The number of satoshis being sent.
+ *   - `basket` - The name of the basket ('nanostore').
+ *   - `description` - A description of the payment.
+ * @throws {ErrorWithCode} If validation or derivation fails.
  */
 export async function derivePaymentInfo(
   {
